@@ -1,0 +1,3 @@
+# Day 2 preparation; inspection scripts otherwise use the standard library.
+numpy==2.3.0
+matplotlib==3.10.0

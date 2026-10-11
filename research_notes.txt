@@ -2,9 +2,10 @@ RESEARCH NOTES - CESNET RESTART
 Date: 2026-10-12
 
 STATUS
-The institution and timestamp archives have been downloaded and checksum
-verified. One institution CSV and its timestamp mapping have been inspected.
-No preprocessing, splitting, training, or performance evaluation has occurred.
+The archives are checksum verified and all 283 institution series compared.
+Institution 0 is selected. Day 2 preprocessing, features, splits, windows,
+training-only scalers, plots, and preparation checks are complete.
+No model training or forecasting/allocation performance evaluation has occurred.
 Do not use GÉANT findings as CESNET findings.
 
 SOURCES
@@ -230,3 +231,307 @@ no Mbps conversion was performed, and no collection-incident causes were
 established. A block with regular timestamps can still contain measurement
 problems. Probe-outage effects and boundary-adjacent measurement durations
 remain unresolved before choosing preprocessing rules.
+
+EXPLORATORY OUTAGE COMPARISON - VERIFIED LOCALLY, 2026-10-12
+Reproduce: python inspect_outage.py
+Evidence: data/inspection/institution_0_outage_check.txt
+Source for the reported incident: https://arxiv.org/html/2409.18874v1, section 4.1.
+The authors describe a probe failure approximately May 21 16:30 through
+June 4 20:00, 2024. The cited passage does not identify affected institutions
+or specify the timezone of these incident times.
+
+METHOD: Compare calendar dates in the supplied timestamp mapping. Periods
+below include full days; May 21 and June 4 are omitted from period averages
+because the reported failure starts/ends partway through those days.
+Both boundary days remain in the report's daily totals and in the raw data.
+The periods have different lengths and weekday mixes. These are exploratory
+comparisons, not training splits or estimates of the outage's causal effect.
+
+Before: May 7-20; 14 days; 2,016 rows.
+  Mean n_bytes per record: 13,842,208,503.82
+  Mean n_packets per record: 13,853,088.29
+  Mean n_flows per record: 125,062.45
+During: May 22-June 3; 13 days; 1,872 rows.
+  Mean n_bytes per record: 6,416,145,463.46
+  Mean n_packets per record: 5,795,378.31
+  Mean n_flows per record: 47,293.84
+After: June 5-18; 14 days; 2,016 rows.
+  Mean n_bytes per record: 9,849,732,944.32
+  Mean n_packets per record: 9,905,707.24
+  Mean n_flows per record: 83,637.69
+These are recorded counts, not Mbps or physical-link utilization.
+
+The during-period mean bytes is 53.65% below the before-period mean and
+34.86% below the after-period mean. All 43 days (May 7-June 18, including
+boundary days) have 144 rows, totalling 6,192 records. All adjacent absolute
+timestamps in this comparison are exactly 600 seconds apart.
+
+INTERPRETATION: The decrease coincides with the authors' reported failure
+and is consistent with undercapture. It does not prove which probe served
+institution 0, or establish how much of its traffic was missed. Seasonality,
+holidays, and real demand changes were not controlled for. After-period
+traffic also remains below the before-period level. Complete timestamps
+therefore cannot be used as proof of complete traffic capture.
+
+STATUS: Raw input SHA256 hashes were unchanged after the inspection.
+No data was repaired, filled, converted to Mbps, or excluded from training;
+training has not started. Final treatment of suspect dates remains pending.
+
+OUTAGE POLICY - SELECTED BY USER; ROW MARKERS IMPLEMENTED, 2026-10-12
+Decision: retain the broader dataset and exclude the suspect outage period
+from future modeling and evaluation (option 1).
+Reproduce: python mark_segments.py, then python mark_exclusions.py
+Output: data/inspection/institution_0_review.csv
+
+Selected dates: May 20-June 5, 2024, inclusive, using the calendar dates in
+the supplied timestamp mapping. This adds one full day before and after the
+reported May 21-June 4 incident. The buffer is our conservative policy for
+approximate incident times with an unspecified timezone; it is not a new
+finding about the actual outage duration or an author-supplied label.
+
+All 40,298 inspection rows remain present. The two added policy columns are
+excluded_for_outage (0 or 1) and exclusion_reason. A value of 1 identifies
+a row covered by the chosen policy, not a proven bad measurement.
+Marked: 2,448 rows across 17 days, each with 144 records.
+Outside these dates: 37,850 rows; not all are necessarily usable for windows.
+Unmarked rows are not guaranteed free of measurement problems.
+
+Verification compared every existing cell in the segmented input and the
+review output. All flags and reasons were checked against the selected date
+range. May 19 and June 6 remain unmarked; May 20 and June 5 are marked.
+SHA256 hashes of both raw input CSVs and the segmented input were unchanged.
+No rows were deleted, traffic values replaced, or timestamps resampled.
+
+REQUIRED FUTURE WINDOW RULE - NOT YET IMPLEMENTED
+Reject a candidate window if any row from its earliest input observation
+through its forecast target is marked, including intervening rows for longer
+horizons. Require that full span to stay within one timestamp segment.
+Do not drop marked rows and stitch the surviving records into a continuous
+sequence. Apply this policy equally to all models and baselines, to training,
+validation, test forecasts, and the downstream allocation evaluation.
+Keep split assignment chronological by target timestamp when implemented.
+
+ROADMAP POSITION
+Work completed so far covers dataset acquisition/provenance and the early
+data-quality work associated with Days 1-2 of the original roadmap. Day 2's
+features, splits, forecasting windows, and pipeline checkpoint are unfinished.
+The CESNET restart requires a revised measurement target and horizons;
+the original GÉANT-specific defaults remain unapproved for CESNET.
+
+TARGET AND UNIT REVIEW - 2026-10-12
+Primary sources reviewed:
+https://arxiv.org/html/2409.18874v1 (sections 2.2-2.4 and table 1)
+https://raw.githubusercontent.com/koumajos/CESNET-TimeSeries24-CD/main/create_datapoints.py
+
+AUTHOR-REPORTED: n_bytes is recorded byte volume in an aggregation interval.
+The original aggregation is 10 minutes. Institutions group constituent IPs.
+OBSERVED PUBLIC CODE: DataPointIP.update adds forward and reverse bytes.
+When both endpoints belong to the monitored network, both IPs are updated.
+The configurable aggregation default is 600 seconds. The collector stores
+its aggregation anchor and adds the current flow before checking whether
+the interval should close. These are code observations, not a verification
+of the exact deployment that produced every released observation.
+
+WORKING PROJECT DEFINITION
+Target source: n_bytes for a single institution series.
+Future derived column: recorded_traffic_mbps.
+Formula: n_bytes * 8 / (600 * 1,000,000).
+Units: nominal recorded megabits per second; 1 megabit = 1,000,000 bits.
+Use the documented nominal interval, not a timestamp discontinuity's length.
+This is a constant normalization of recorded volume, not recovered traffic.
+
+ARITHMETIC CHECKS - LOCAL RAW DATA, NO CONVERSION FILE WRITTEN
+600,000,000 bytes over nominal 600 seconds corresponds to 8 Mbps.
+Institution 0, ID 100: 2023-10-09 18:43:49+02:00.
+n_bytes = 20,082,068,274; nominal recorded rate = 267.76091032 Mbps.
+The inverse calculation recovers the original count.
+
+INTERPRETATION AND OPEN LIMITS
+Both directions contribute; this is not a download-only or upload-only rate.
+Endpoint accounting may repeat a flow when multiple monitored IPs are grouped.
+The institution-export queries and any deduplication were not established
+from the reviewed collector repository. Do not claim unique network-wide
+volume by summing institutions, or equate this target with link utilization.
+Flow-record aggregation is not packet-by-packet timing or instantaneous rate.
+Deployment-time availability and boundary-adjacent durations remain open.
+The capacity experiment will use an abstract pool in these same nominal units.
+Final series selection and forecast horizons are still pending.
+
+GENERATED CSV FORMATTING CHECK - VERIFIED LOCALLY, 2026-10-12
+The segment and review CSVs were found with padding in headers and values.
+Ordinary csv.DictReader lookup could no longer find n_bytes or time ID 100.
+After stripping padding for comparison only, all 19 original measurement/ID
+cells matched the raw institution file row for row. The padded copies were
+preserved in data/inspection/formatting_backup/ before regeneration.
+Running mark_segments.py and mark_exclusions.py restored machine-readable
+headers and IDs, with the same 40,298 rows, six segments, and 2,448 outage flags.
+Raw files were not altered. Keep alignment formatting in a viewer rather
+than saving padding into CSV cells used as program input.
+
+ROADMAP: Still Day 2 data preparation. Target units are now documented;
+no modeling table, feature generation, forecasting windows, or training yet.
+
+INSTITUTION COMPARISON BEFORE SELECTION - VERIFIED LOCALLY, 2026-10-12
+Requested by user before choosing the experimental series.
+Reproduce: python compare_institutions.py
+Evidence: data/inspection/institution_comparison.csv and .txt
+Scope: all institution-level 10-minute CSVs in the existing archive, read
+without extracting additional files or running any forecasting model.
+
+Institution files inspected: 283. Shared timestamp mapping: 40,298 IDs.
+All supplied IDs present: 56 institutions.
+At least 95% mapped-row coverage: 229 institutions.
+Median mapped-row coverage: 99.9231%.
+Coverage is availability of mapped records, not completeness of captured traffic.
+No duplicate IDs, unmapped IDs, or non-increasing timestamps were found.
+For n_bytes only: no blank, invalid/nonfinite, negative, or observed zero cells.
+Other measurement columns were not audited across all 283 institutions.
+Absent records were not treated as zeros or filled.
+
+PROSPECTIVE AVAILABILITY METHOD
+For comparison only, exclude the selected outage dates and both endpoints
+of each uninterrupted 600-second timestamp run. This endpoint guard is a
+conservative proposal for uncertain boundary-adjacent measurement durations.
+Observed zeros, if present, remain legitimate values; missing targets break
+usable runs. A prospective three-hour history uses 18 observations. A six-step
+lead reaches 60 minutes, so the complete input-to-target span is 24 records.
+A safe run of length L supplies max(0, L-23) prospective windows.
+No features, chronological splits, or scaler fitting were performed here.
+
+Ranking is by prospective window count, then numeric institution ID.
+No model errors or test performance were used to select or rank data.
+IDs 0, 1, 2, and 3 all have 100% mapped coverage, longest safe run 17,622
+records, and 37,677 prospective 60-minute windows.
+Mean recorded n_bytes per observation across the complete series:
+0: 11,361,415,774.47
+1:  8,674,344,205.49
+2: 14,633,841,208.97
+3:  3,922,102,394.56
+Outage-period comparisons remain descriptive and do not certify any
+institution as unaffected by the broken monitoring probe.
+
+VALIDATION
+Institution 0's 40,298 rows and five irregular transitions agree with the
+earlier separate audit. Synthetic checks covered uninterrupted timestamps,
+a gap, missing target values, observed zeros, and outage exclusion dates.
+These checks verified the prospective run/window counting logic.
+
+RECOMMENDATION - NOT A COMPLETED SERIES SELECTION
+Retain institution 0 for the first experiment: tied prospective availability,
+lowest numeric ID among tied candidates, and existing all-column audit.
+This does not establish that institution 0 is the best forecasting series.
+Day 2 remains open: final series selection, features, splits, actual windows,
+training-only scalers, plots, and end-to-end preparation checks are unfinished.
+
+PRIMARY SERIES - SELECTED BY USER, 2026-10-12
+The user chose institution 0 after the 283-institution comparison.
+This is the primary experimental series, selected before model training.
+No best-model, best-accuracy, or unaffected-by-outage claim is implied.
+
+UNSCALED FEATURE TABLE - IMPLEMENTED AND VERIFIED, 2026-10-12
+Reproduce: python build_features.py after mark_segments.py and mark_exclusions.py.
+Output: data/prepared/institution_0_features.csv
+All 40,298 rows and original review cells are preserved.
+Added nominal recorded Mbps and a separate causal input rate, target-observed
+and input-missing flags, boundary and eligibility flags, and hour/weekday
+sine-cosine features. Hour encoding retains minutes and seconds. Calendar
+features use the supplied clock and offset; no named timezone is invented.
+
+BOUNDARY DECISION
+Guard the first and last observation of each uninterrupted timestamp block,
+including the dataset's outer edges. Six blocks produce 12 guarded rows.
+This is a precaution for uncertain interval durations, not confirmed data loss.
+The 12 guards do not overlap the 2,448 outage-marked observations.
+Eligible input and target observations: 37,838 each.
+Eligibility does not certify complete traffic capture.
+
+CAUSAL MISSING-VALUE HANDLING
+Input filling can use an earlier observed rate within an allowed block only.
+Exclusions reset the carried value. A missing observation without usable
+past data remains ineligible as an input. Targets are never filled.
+The current series has zero missing byte cells, so zero values were imputed.
+Future rolling statistics will be computed inside the input window, avoiding
+additional unreported history beyond the selected lookback.
+
+VALIDATION
+Every original review cell was compared with the output and remained equal.
+The rate at ID 100 agrees with the earlier arithmetic check.
+Synthetic checks covered known calendar phases, causal filling, missing-target
+exclusion, guarded edges, and resetting at a timestamp break. Changing a future
+byte value left all earlier feature rows unchanged.
+Outage-marked targets are ineligible; all 12 boundary guards are present.
+
+DAY 2 STATUS: Still open. Base features are ready; chronological splits,
+actual input/target windows, rolling features, training-only scalers, plots,
+and the complete preparation checkpoint remain unfinished. No training started.
+
+DAY 2 COMPLETE - IMPLEMENTED AND VERIFIED, 2026-10-12
+Regenerate: python prepare_dataset.py
+Behavioral tests: python -m unittest -v test_preparation
+Dependencies used: Python 3.12.10, NumPy 2.3.0, Matplotlib 3.10.0.
+Requirements are recorded in requirements.txt. No model training performed.
+
+SETUP
+Primary series: institution 0. Input: 18 nominal 10-minute observations (3 hours).
+Direct forecast horizons: 10, 30, 60 minutes (1, 3, 6 observations ahead).
+This adapts the original roadmap's 15-minute horizon to CESNET sampling;
+no interpolation was used to invent a 15-minute target.
+Eight input features: nominal historical Mbps, hour sine/cosine, weekday
+sine/cosine, missing-input flag, rolling mean, and rolling standard deviation.
+Rolling statistics use the latest up to six observations WITHIN each input
+window, including the current historical observation; ddof=0. The first five
+positions have shorter rolling histories. No extra hidden history is used.
+
+TIME AND SPLITS
+Assume an interval is available at supplied start +600 seconds for offline
+replay. Forecast origin is the last input's nominal completion. The target
+completion is 10/30/60 minutes beyond that origin. The live collector's export
+and processing delays are not verified; these are not deployment guarantees.
+Cut points use 70% and 85% of the full ordered observation count before
+exclusions. Windows are assigned by target nominal completion timestamp.
+Validation start: 2024-04-21T22:40:52+00:00.
+Test start: 2024-06-02T22:10:52+00:00.
+The outage overlaps validation and early test. Eligible windows therefore
+do not retain exact 70/15/15 count ratios. Earlier observations can supply
+validation/test histories; no later observation enters a training window.
+
+GENERATED WINDOW COUNTS - data/prepared/window_counts.csv
+Horizon     Train     Validation     Test      Total
+10 min      28,129     4,029          5,554     37,712
+30 min      28,121     4,029          5,548     37,698
+60 min      28,109     4,029          5,539     37,677
+The 60-minute total agrees with the earlier prospective comparison.
+First usable test target completions after the excluded period:
+10 min: 2024-06-06T01:10:52+00:00.
+30 min: 2024-06-06T01:30:52+00:00.
+60 min: 2024-06-06T02:00:52+00:00.
+
+SCALERS AND ARTIFACTS
+Input scalers use all timesteps in training windows only; repeated window
+observations contribute repeatedly. Target scalers use training targets only.
+Fits are separate per horizon and shared by future neural models for that
+horizon. Zero standard deviations are replaced with one. Means and scales
+are JSON artifacts; model-ready X/y arrays are float32. NPZ files also retain
+unscaled input and target nominal rates for baselines and evaluation.
+Split codes: 0 training, 1 validation, 2 test.
+Saved under data/prepared/: feature table, timeline_splits.csv, per-horizon
+window CSV/NPZ and scaler JSON files, preparation_config.json,
+window_counts.csv, preparation_checks.txt, and traffic_quality.png.
+The plot displays recorded traffic, policy exclusions, missing byte cells,
+and split boundaries. It is an inspection figure, not a forecasting result.
+
+CHECKS PASSED
+Every retained input-to-target path stays within one timestamp segment,
+has 600-second gaps throughout, and contains no outage/boundary exclusion.
+All three splits are nonempty at every horizon. Features and targets are
+finite. Target inverse scaling recovers the original rates within float32
+tolerance. CSV metadata and NPZ shapes/counts agree: X is [windows, 18, 8].
+Saved target-scaler statistics agree with the saved training targets.
+Both raw input SHA256 hashes stayed unchanged through preparation.
+Three behavioral tests passed: intervening excluded rows reject a window,
+future values cannot change past rolling features, and holdout values cannot
+change training scalers. The generated plot was visually inspected.
+
+COMPLETION: Day 2's leakage-safe preparation checkpoint is achieved.
+Next is Day 3: baselines and the first LSTM experiment. No trained models,
+forecast accuracy numbers, allocation results, or dashboard are present yet.
