@@ -1,0 +1,232 @@
+RESEARCH NOTES - CESNET RESTART
+Date: 2026-10-12
+
+STATUS
+The institution and timestamp archives have been downloaded and checksum
+verified. One institution CSV and its timestamp mapping have been inspected.
+No preprocessing, splitting, training, or performance evaluation has occurred.
+Do not use GÉANT findings as CESNET findings.
+
+SOURCES
+Dataset: https://zenodo.org/records/13382427
+Methods: https://arxiv.org/html/2409.18874v1
+Journal article: https://doi.org/10.1038/s41597-025-04603-x
+
+DOCUMENTATION-REPORTED FACTS, NOT LOCAL VERIFICATION
+The authors report collection from 2023-10-09 to 2024-07-14 (40 weeks).
+The dataset release is from 2024; the journal article is from 2025.
+It contains time series derived from real CESNET3 ISP network flows,
+including institution-level series, with 10-minute aggregation available.
+These statements must be checked against the downloaded version.
+
+FIRST CHECKLIST
+Verify one institution series and its timestamp mapping before coding.
+Confirm column definitions, units, direction accounting, interval boundaries,
+timezone, missing-row meaning, zero-value meaning, author preprocessing,
+known outages, and anomaly documentation.
+Do not assume institution totals can be summed without double counting.
+Flow duration is not network latency; byte counts are not bandwidth rates.
+Traffic-rate conversion must use the verified interval and byte definition.
+
+NO INHERITED DATASET DEFAULTS
+Target, features, horizons, lookback, cleaning, and splits are pending.
+Do not transfer GÉANT's sampling interval, matrix assumptions, thresholds,
+coverage findings, or numerical results to CESNET.
+
+RECORDING RULE
+Label future entries as verified locally, reported by authors, interpretation,
+decision, or open question. Include evidence paths or source links.
+Treat collection failures separately from genuine traffic anomalies.
+
+ARCHIVE
+Previous GÉANT data, outputs, notes, and original configuration/experiment
+files are isolated under archive/geant_restart_2026-10-12.
+They are historical material, not active CESNET inputs or results.
+
+DOCUMENTATION REVIEW - 2026-10-12 (AUTHOR-REPORTED, NOT LOCAL CHECKS)
+Source: https://arxiv.org/html/2409.18874v1
+Sections 2.1-2.4, 3.1, and 4.1:
+- Capture excludes transit flows and single TCP-SYN scans; sparse IP series
+  with fewer than 100 datapoints were filtered out.
+- Institution series aggregate grouped IP addresses; do not treat them as
+  complete physical-link measurements.
+- One monitoring probe failed approximately 2024-05-21 16:30 through
+  2024-06-04 20:00. Which institution series are affected remains unresolved.
+- Inactivity gaps and genuine anomalies occur. Missing rows cannot be assumed
+  to be collection failures or valid zeros without further checks.
+- Time IDs require a separate timestamp mapping. Timezone remains unresolved.
+
+OFFICIAL EXAMPLE CODE - OBSERVED IMPLEMENTATION
+Source: https://raw.githubusercontent.com/koumajos/CESNET-TimeSeries24-Example/main/sarima_retraining.py
+Its fill_missing function inserts zeros for absent non-ratio measurements
+and 0.5 for ratios. This is an example policy, not proof of what every absent
+row means. We have not adopted it. Its timestamp table uses id_time and time;
+our eventual reader should join explicitly by ID, not assume row alignment.
+
+DOWNLOAD SCOPE - DATASET RECORD
+Source: https://zenodo.org/records/13382427
+Inspect institutions.tar.gz (about 479.4 MB) with times.tar.gz (about 211.5 kB).
+No download or parsing is performed in this documentation-review step.
+Next: inspect one institution file and its mapped timestamps, preserving
+missing values and zeros as distinct observations until their meaning is clear.
+
+LOCAL TIMESTAMP MAPPING INSPECTION - 2026-10-12
+Archive: data/raw/cesnet/times.tar.gz
+MD5 verified against Zenodo: a03813763e07646ca38f17ffd53e549e
+Extracted member: times/times_10_minutes.csv
+Local copy: data/raw/cesnet/sample/times_10_minutes.csv
+Columns: id_time, time. Row count: 40,298.
+First row: id_time 0 -> 2023-10-09 02:03:49+02:00
+Last row: id_time 40297 -> 2024-07-14 23:50:52+02:00
+The first six rows advance by 10 minutes, with seconds retained at :49.
+Timestamps explicitly carry UTC offsets. This resolves the earlier question
+of whether the supplied mapping contains timezone information; a named
+timezone and full interval consistency are still unverified.
+Do not round timestamps to clock-aligned 10-minute boundaries or reconstruct
+all times as first_time + id_time * 600 seconds without checking the mapping.
+At this stage only the mapping had been inspected; see the next entry for
+the subsequent institution-file inspection.
+
+LOCAL INSTITUTION SAMPLE INSPECTION - 2026-10-12
+Dataset version: Zenodo record 13382427, version v1.
+Downloads:
+https://zenodo.org/records/13382427/files/institutions.tar.gz?download=1
+https://zenodo.org/records/13382427/files/times.tar.gz?download=1
+Original archives preserved at data/raw/cesnet/.
+institutions.tar.gz: 479,428,489 bytes.
+Published MD5 matched: ab3e15fb8dc9b7120ddb2318795b6812.
+times.tar.gz: 211,467 bytes; published MD5 matched as recorded above.
+
+Extracted one member only: institutions/agg_10_minutes/0.csv.
+Inspection copy: data/raw/cesnet/sample/institution_0.csv.
+Selected by first matching archive member, not by performance or traffic level.
+This is an inspection sample; institution 0 is not yet the training choice.
+
+Observed header (19 columns, exact spellings):
+id_time, n_flows, n_packets, n_bytes,
+sum_n_dest_asn, average_n_dest_asn, std_n_dest_asn,
+sum_n_dest_ports, average_n_dest_ports, std_n_dest_ports,
+sum_n_dest_ip, average_n_dest_ip, std_n_dest_ip,
+tcp_udp_ratio_packets, tcp_udp_ratio_bytes,
+dir_ratio_packets, dir_ratio_bytes, avg_duration, avg_ttl.
+Actual spellings differ from some documentation labels (average versus avg,
+and ports versus port). Any reader must use the observed schema.
+
+Rows: 40,298. Duplicate id_time values: 0.
+Every row's id_time was found in the supplied timestamp mapping.
+This does NOT establish absence of missing numeric values, abnormal traffic,
+or probe failures; those have not been audited.
+
+First three matched records:
+ID 0: 2023-10-09 02:03:49+02:00; n_bytes=3166747052;
+      n_packets=3727333; n_flows=83396.
+ID 1: 2023-10-09 02:13:49+02:00; n_bytes=4830875433;
+      n_packets=5170745; n_flows=82401.
+ID 2: 2023-10-09 02:23:49+02:00; n_bytes=3061835163;
+      n_packets=3188751; n_flows=76467.
+Last ID: 40297 -> 2024-07-14 23:50:52+02:00.
+
+No numeric values have been replaced, converted into a training table, or
+removed. No full archive extraction or model code was created in this step.
+NEXT: Audit this sample's timestamp intervals and numeric missing/zero values
+before selecting a target or applying any missing-data policy.
+
+RAW SAMPLE QUALITY AUDIT - VERIFIED LOCALLY, 2026-10-12
+Reproduce: python audit_sample.py
+Detailed report: data/inspection/institution_0_audit.txt
+Scope: institution_0.csv and supplied timestamp mapping only.
+
+All 40,298 mapping IDs are present in the institution sample.
+No duplicate IDs, duplicate absolute timestamps, or non-increasing times.
+Across 18 measurement columns: no blank, nonnumeric, nonfinite, negative,
+or zero values. All four ratio columns remain within [0, 1].
+n_bytes ranges from 23,102,686 to 58,764,053,063 bytes.
+These checks do not establish that the observed traffic is fully captured,
+nor determine whether this institution was affected by the documented outage.
+
+IMPORTANT: Consecutive IDs do not guarantee equal elapsed time.
+After conversion to UTC, 5 of 40,297 transitions are not 600 seconds:
+- IDs 2879 -> 2880: 2023-10-29 01:53:49+02:00 to
+  2023-10-29 02:03:49+01:00; elapsed 4,200 seconds.
+- IDs 3646 -> 3647: 2023-11-03 09:43:49+01:00 to
+  2023-11-03 09:54:56+01:00; elapsed 667 seconds.
+- IDs 14613 -> 14614: 2024-01-18 13:34:56+01:00 to
+  2024-01-18 13:50:52+01:00; elapsed 956 seconds.
+- IDs 40062 -> 40063: 2024-07-13 08:10:52+02:00 to
+  2024-07-13 08:30:52+02:00; elapsed 1,200 seconds.
+- IDs 40100 -> 40101: 2024-07-13 14:40:52+02:00 to
+  2024-07-13 15:10:52+02:00; elapsed 1,800 seconds.
+Independent Unix-time subtraction confirmed these five elapsed durations.
+The mapping contains offsets +01:00 and +02:00. Do not discard offsets.
+The first irregular transition coincides with an offset change; this does
+not by itself establish whether data was lost or timestamps were relabeled.
+
+OPEN: Establish the causes and treatment of these timestamp discontinuities.
+Do not assume byte counts span the entire gap between adjacent timestamps.
+The documented aggregation window and the observed inter-row gap are
+different concepts; rate conversion at boundaries requires interpretation.
+No filling, interpolation, resampling, outlier removal, or rate conversion
+has been applied. Series selection and preprocessing decisions remain pending.
+
+TIMESTAMP BOUNDARY INVESTIGATION - 2026-10-12
+Evidence: data/inspection/timestamp_boundaries.txt
+Five-record neighborhoods were inspected for each break. Counts remain
+present on both sides; this cannot establish whether intervening data exists.
+The November timestamp phase changes from seconds :49 to :56; January
+changes from :56 to :52 and shifts minutes. July gaps retain the same phase.
+October's break coincides with a change from offset +02:00 to +01:00.
+These are observations, not verified diagnoses of collection failure.
+
+AUTHOR CODE REVIEW - OBSERVED BEHAVIOR, NOT INCIDENT CONFIRMATION
+Source: https://raw.githubusercontent.com/koumajos/CESNET-TimeSeries24-CD/main/create_datapoints.py
+The published collector initializes its time anchor from the first received
+flow's end time and advances its anchor by the configured aggregation period,
+which defaults to 600 seconds. This permits a restart to establish a new
+phase, but does not prove a restart caused the observed phase shifts.
+No explanation for these exact five boundaries was located in the reviewed
+paper, collector code, or public example-repository issue listing.
+
+CONSERVATIVE HANDLING PROPOSAL - NOT YET IMPLEMENTED
+Keep timestamps and measurements unchanged; mark each non-600-second
+transition as a boundary. Build future input/target windows only within a
+continuous block, checking the complete origin-to-target path for longer
+horizons as well as the input history. Do not silently bridge boundaries,
+fill zeros, interpolate, relabel timestamps, or stretch byte-count duration.
+Boundary-adjacent measurement durations remain uncertain and require a
+separate rule before any rate conversion. This proposal is not a correction
+of the underlying timestamps and does not address the documented probe outage.
+
+CONTINUOUS-BLOCK LABELS - IMPLEMENTED AND VERIFIED, 2026-10-12
+Reproduce: python mark_segments.py
+Output: data/inspection/institution_0_segments.csv
+Scope: the same institution 0 inspection sample, not a selected training series.
+
+The output retains all 40,298 rows in their original order and all 19 original
+columns as unchanged cell strings. Five added columns record the supplied
+timestamp, its UTC representation, the preceding elapsed gap in seconds,
+the segment ID, and whether a boundary occurs before the row.
+The first row has a blank gap and no preceding boundary.
+A new segment starts at each positive elapsed gap other than 600 seconds.
+Duplicate IDs, absent timestamp mappings, timestamps without offsets, and
+non-increasing timestamps cause the script to stop rather than alter the data.
+
+Verified segment lengths and inclusive time-ID ranges:
+1: IDs 0-2879,       2,880 rows
+2: IDs 2880-3646,      767 rows
+3: IDs 3647-14613,  10,967 rows
+4: IDs 14614-40062, 25,449 rows
+5: IDs 40063-40100,     38 rows
+6: IDs 40101-40297,    197 rows
+
+Verification compared every original cell and mapped timestamp, all five
+boundary IDs and gap durations, and every within-block 600-second transition.
+SHA256 hashes of both raw CSV inputs were unchanged after script execution.
+The raw archives were not modified.
+
+STATUS: Only the block-marking part of the preceding proposal is implemented.
+Forecast windows have not been created; enforcement of within-block input
+and forecast paths remains future work. No values were filled or removed,
+no Mbps conversion was performed, and no collection-incident causes were
+established. A block with regular timestamps can still contain measurement
+problems. Probe-outage effects and boundary-adjacent measurement durations
+remain unresolved before choosing preprocessing rules.
