@@ -4,7 +4,7 @@ An academic project investigating traffic forecasting with LSTM, GRU, and a smal
 
 ## Current progress
 
-**Day 2 data preparation is complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. Its archives have been downloaded and checksum verified locally. No forecasting models have been trained.
+**Day 2 data preparation is complete; Day 3 baseline evaluation is underway.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. Its archives have been downloaded and checksum verified locally. No neural models have been trained.
 
 Implemented:
 
@@ -16,9 +16,10 @@ Implemented:
 - Build unscaled traffic-rate and calendar features with observation and eligibility flags.
 - Generate chronological splits, direct forecasting windows, training-only scalers, and a traffic/quality plot.
 - Check full window paths, timestamp alignment, causal features, and scaler leakage.
+- Evaluate persistence and four-observation moving-average baselines at 10 minutes.
 - Record findings, evidence, and unresolved questions in the research notes.
 
-Model training, forecasting evaluation, bandwidth-allocation simulation, and the dashboard are pending. Numerical claims in earlier research drafts are not results from this implementation.
+Neural-model training, remaining horizon comparisons, bandwidth-allocation simulation, and the dashboard are pending. Numerical claims in earlier research drafts are not results from this implementation.
 
 ## Files
 
@@ -33,6 +34,13 @@ Model training, forecasting evaluation, bandwidth-allocation simulation, and the
 | `prepare_dataset.py` | Regenerate features, splits, windows, scalers, configuration, checks, and the plot from raw inputs. |
 | `test_preparation.py` | Check that exclusions and future/holdout values cannot leak into windows or training statistics. |
 | `requirements.txt` | NumPy and Matplotlib versions used by the preparation command. |
+| `evaluate_baselines.py` | Evaluate baseline forecasts on saved validation and test windows. |
+| `forecast_metrics.py` | Compute MAE, RMSE, positive-target MAPE, and R² in original nominal units. |
+| `test_baselines.py` | Hand-check baseline behavior, metric arithmetic, and zero/constant-target cases. |
+| `lstm_model.py` | Two-layer, 64-unit LSTM with a direct scalar forecast head. |
+| `train_lstm.py` | Train using validation early stopping, restore the best checkpoint, then evaluate. |
+| `test_lstm.py` | Verify independent windows, checkpoint restoration, and finite gradient updates. |
+| `requirements-training.txt` | Training dependencies, including the PyTorch version. |
 | `dataset_notes.md` | Dataset checklist, current inspection status, and pending decisions. |
 | `research_notes.txt` | Detailed evidence and findings for the eventual research paper. |
 
@@ -152,9 +160,66 @@ The complete ordered timeline is split by observation count at 70% and 85%, befo
 
 The usable counts are not exactly 70/15/15 because exclusions and required histories are applied after fixing the cut points. The outage removes part of validation and the beginning of test; exact timestamps are saved in the CSVs. Both the automated path checks and the three behavioral tests passed locally. Raw input hashes remained unchanged.
 
+## Day 3: initial baselines
+
+```powershell
+python -m unittest -v test_baselines
+python evaluate_baselines.py --horizon 10
+```
+
+Persistence repeats the latest historical nominal rate. The moving average uses the latest four input observations, covering 40 nominal minutes. These fixed definitions require no fitting; training time is recorded as zero. They use the same saved windows as future neural models, with no future target values used in their predictions.
+
+Outputs are saved in `results/baselines/10min/`: timestamped `predictions.csv`, `metrics.csv`, `run_config.json`, and `test_prefix.png`. The plot shows the first 144 chronological test forecasts; scores use every eligible test window. Generated results remain excluded from Git.
+
+| Baseline | Test MAE (Mbps) | Test RMSE (Mbps) | Test MAPE (%) | Test R² |
+| --- | ---: | ---: | ---: | ---: |
+| Persistence | 24.287 | 38.629 | 22.933 | 0.570 |
+| Moving average (4 observations) | 21.025 | 32.478 | 20.608 | 0.696 |
+
+Each baseline has 4,029 validation and 5,554 test predictions. MAPE uses positive targets and reports exclusions; none were excluded in this run. Undefined MAPE or R² is saved as a blank cell. CPU inference time averages 1,000 single-window predictions after 25 warm-up calls on preloaded histories, including loop/call overhead but excluding file loading and preprocessing. Timing varies with hardware and system load.
+
+The command also accepts `--horizon 30` or `--horizon 60` for the later comparison stage; those runs have not been performed yet. The baseline window was fixed before evaluating test results. Future model settings must use validation data, not test scores.
+
+## First LSTM: implemented, training pending
+
+The model has two unidirectional LSTM layers with 64 hidden units and a linear forecast head: 52,289 parameters for the eight prepared input features. Each window starts with a fresh hidden state. Dropout is zero. It uses the existing 18-observation histories and shared metrics.
+
+The first-run settings are fixed: seed 42, Adam with learning rate 0.001, batch size 64, scaled-target MSE, maximum 30 epochs, and early-stopping patience five. The lowest validation loss selects the checkpoint; test metrics are computed only after restoring it. Training windows shuffle using a seeded generator, while validation and test remain chronological. Predictions are not clipped for accuracy evaluation.
+
+### Training environment
+
+Use the project `.venv` interpreter. For a fresh environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-training.txt
+```
+
+For this Python 3.12 Windows setup, the CUDA-enabled PyTorch 2.14.1 wheel is available from the official download host:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install --upgrade "https://download.pytorch.org/whl/cu130/torch-2.14.1%2Bcu130-cp312-cp312-win_amd64.whl"
+.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+GPU readiness means the second command reports `True`. The user is handling CUDA setup; the environment currently tested for the model was PyTorch `2.14.1+cpu`. Our package download was stopped before replacement. Base dependency versions are specified in `requirements.txt`; install them with the same interpreter when preparing the final training environment.
+
+### Check and run
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest -v test_lstm test_preparation test_baselines
+.\.venv\Scripts\python.exe train_lstm.py --horizon 10 --device cuda
+```
+
+CPU execution is supported with `--device cpu`; the default `--device auto` chooses CUDA when PyTorch reports it available. No full training run has been performed yet. All ten CPU unit checks passed, and a temporary optimizer/inference smoke check on 64 real training windows passed. Its weights were discarded and are not experiment results.
+
+A successful training run will save `results/lstm/10min/`: `best_model.pt`, `training_history.csv`, timestamped `predictions.csv`, `metrics.csv`, run/scaler/preparation configuration JSON files, `comparison.csv`, `test_prefix.png`, and `learning_curve.png`. Baseline comparisons require matching prepared-artifact hashes. CPU timing uses the existing 25-warm-up/1,000-call protocol on preloaded tensors with one CPU thread and includes inverse output scaling. Training time includes epoch passes, validation, and improved-checkpoint saves, excluding file loading and final evaluation.
+
+The script enables deterministic algorithms and seeds Python, NumPy, and PyTorch. One seed does not quantify model uncertainty or guarantee identical results across platforms or PyTorch versions; see [PyTorch's reproducibility guidance](https://docs.pytorch.org/docs/2.14/notes/randomness.html).
+
 ## Next milestone
 
-Day 3: implement persistence and moving-average baselines, then the first LSTM experiment. Continue using the saved split definitions, exclusions, and physical-unit interpretation.
+Day 3 remains open. Verify CUDA readiness and run the first 10-minute LSTM experiment, then implement the initial forecast-to-capacity calculation. No GRU, Transformer, allocation simulation, or dashboard has been implemented yet.
 
 ## Dataset references
 

@@ -5,7 +5,8 @@ STATUS
 The archives are checksum verified and all 283 institution series compared.
 Institution 0 is selected. Day 2 preprocessing, features, splits, windows,
 training-only scalers, plots, and preparation checks are complete.
-No model training or forecasting/allocation performance evaluation has occurred.
+Day 3's 10-minute baselines have been evaluated on validation and test data.
+No neural-model training or allocation performance evaluation has occurred.
 Do not use GÉANT findings as CESNET findings.
 
 SOURCES
@@ -535,3 +536,120 @@ change training scalers. The generated plot was visually inspected.
 COMPLETION: Day 2's leakage-safe preparation checkpoint is achieved.
 Next is Day 3: baselines and the first LSTM experiment. No trained models,
 forecast accuracy numbers, allocation results, or dashboard are present yet.
+
+DAY 3: INITIAL BASELINES - IMPLEMENTED AND EVALUATED, 2026-10-13
+Reproduce: python evaluate_baselines.py --horizon 10
+Checks: python -m unittest -v test_baselines
+Evidence: results/baselines/10min/metrics.csv, predictions.csv, run_config.json,
+and test_prefix.png. No neural model has been trained.
+
+BASELINE DEFINITIONS - FIXED BEFORE TEST EVALUATION
+Persistence: forecast equals the latest rate in the input history.
+moving_average_4: forecast equals the mean of the last four observations.
+Four CESNET observations cover 40 nominal minutes, not the one-hour duration
+of four intervals in the earlier GÉANT roadmap. No fitting step is required;
+training_time_s is zero by definition. Predictions use original nominal Mbps
+from saved input histories, not the scaled targets or future observations.
+
+RESULTS - 10-MINUTE HORIZON, NOMINAL RECORDED UNITS
+Model             Split         N       MAE Mbps   RMSE Mbps   MAPE %     R2
+persistence       validation    4,029   31.352160   44.237666   19.894644   0.719977
+persistence       test          5,554   24.287000   38.629074   22.933335   0.569533
+moving_average_4  validation    4,029   27.664897   38.010737   17.644198   0.793261
+moving_average_4  test          5,554   21.025244   32.477790   20.607569   0.695712
+MAPE uses positive targets only; exclusions are counted in the metric CSV.
+Zero targets remain included in MAE, RMSE, and R2. Both current evaluation
+splits have zero MAPE exclusions. Undefined MAPE/R2 is represented by a blank
+CSV cell, not a fabricated score. Shared metric code is forecast_metrics.py.
+
+CPU INFERENCE MEASUREMENT
+Single-window predictions on preloaded NumPy histories, 25 warm-up calls and
+1,000 timed calls. Timed windows cycle chronologically; the average includes
+loop/call overhead and excludes file I/O and preprocessing. Timing is machine
+and load dependent. The run configuration records Python/NumPy, platform,
+processor, the timing protocol, and hashes of the saved preparation artifacts.
+No claim about neural-model speed is made before comparable measurement.
+
+INTERPRETATION
+The four-observation average has lower error than persistence on these saved
+10-minute validation and test splits. This is an observed baseline result,
+not evidence that smoothing always wins or that a future LSTM will outperform
+either baseline. Model architecture and tuning decisions must use validation
+data; test results must not be used to select hyperparameters.
+
+CHECKS AND PRESENTATION
+Four unit tests passed: flat/changing-history behavior, hand-calculated errors,
+positive-target MAPE exclusions, and undefined scores on constant/zero targets.
+The plot displays the first 144 chronological test predictions, chosen as a
+fixed prefix, not for favorable accuracy. Full-split scores are in metrics.csv.
+The baseline command validates saved metadata/array split agreement.
+No dataset values, prepared windows, or split assignments were changed.
+
+ROADMAP: Day 3 is in progress. Baselines at 10 minutes are ready; the first
+LSTM and the forecast-to-allocation checkpoint remain unfinished. Thirty- and
+sixty-minute baseline runs remain for the later multi-horizon comparison.
+
+FINAL BASELINE ARTIFACT AUDIT - VERIFIED LOCALLY, 2026-10-13
+All 19,166 saved prediction rows (two models, validation plus test) were
+checked against the prepared unscaled targets and historical input values.
+Baseline formulas, split labels, and the 600-second origin-to-target-completion
+lead all agreed. Both raw source hashes still match the Day 2 manifest.
+The prediction plot was visually inspected. Generated result files remain
+ignored by Git; only source code and documentation were changed.
+
+DAY 3: FIRST LSTM IMPLEMENTATION - 2026-10-13
+Code: lstm_model.py, train_lstm.py, test_lstm.py.
+Training dependencies: requirements-training.txt.
+Architecture: two unidirectional LSTM layers, hidden size 64, eight input
+features, dropout zero, and a linear scalar forecast head. Parameter count
+is 52,289. Hidden state resets for each independent window.
+Settings: seed 42; Adam; learning rate 0.001; batch size 64; scaled-target
+MSE; maximum 30 epochs; patience five; strict validation-loss improvement.
+No architecture or hyperparameter search has been performed.
+
+TRAINER BEHAVIOR - IMPLEMENTED, EXPERIMENT NOT YET RUN
+Training windows shuffle using a seeded generator. Validation/test order
+stays chronological. The lowest validation MSE selects best_model.pt.
+Test evaluation occurs only after training stops and that checkpoint loads.
+Original-unit metrics use the saved target scaler and shared metric code.
+Predictions are not clipped; negative prediction counts will be disclosed.
+Successful runs save model weights, training history, timestamped forecasts,
+metrics, scalers, preparation/run settings, plots, and a baseline comparison.
+Baseline comparison checks common prepared-artifact hashes.
+CPU inference uses preloaded feature tensors, one CPU thread, 25 warm-up and
+1,000 timed single-window calls; includes inverse output scaling. Training
+time covers the epoch loop, validation, and saving improved checkpoints.
+
+REPRODUCIBILITY AND SCOPE
+Seeds cover Python, NumPy, and PyTorch. Deterministic algorithms are enabled;
+cuDNN benchmarking is disabled and CUBLAS_WORKSPACE_CONFIG is :4096:8.
+Primary API references reviewed:
+https://docs.pytorch.org/docs/2.14/generated/torch.nn.LSTM.html
+https://docs.pytorch.org/docs/2.14/notes/randomness.html
+One seed remains a limitation; no uncertainty estimate or cross-platform
+bitwise reproducibility claim is made.
+
+ENVIRONMENT FINDINGS AND USER HANDOFF
+Hardware: RTX 4050 Laptop GPU, 6 GB, reported by nvidia-smi.
+Project environment currently has PyTorch 2.14.1+cpu; CUDA detection is false.
+Its NumPy/Matplotlib versions at the CPU check were 2.5.4 and 3.11.2.
+Prepared artifacts and baseline results were not regenerated with those versions.
+The official CUDA 13.0 wheel was located. The mirror chosen by pip returned
+an access error during connection checks; the primary download host responded.
+The user requested ownership of CUDA installation. Our pending download was
+stopped before replacement, and no further CUDA download was initiated.
+Use the same project .venv interpreter and require torch.cuda.is_available()
+to return True before the requested GPU training command.
+
+CPU VALIDATION - PASSED, NOT FULL MODEL TRAINING
+Ten unit checks passed across the LSTM, preparation, and baseline modules.
+LSTM checks cover batched/separate-window equivalence, checkpoint prediction
+restoration, finite gradients, and an optimizer update changing weights.
+A real-data smoke check used the first 64 TRAINING windows only: one optimizer
+step and batched inference were finite, and helper loss evaluation worked.
+Temporary smoke-test weights were discarded; no model checkpoint or neural
+accuracy result from a completed experiment has been saved.
+
+ROADMAP: Day 3 remains in progress. LSTM implementation and CPU checks are
+ready; the first full training/evaluation run waits for the user's CUDA setup.
+Initial forecast-to-allocation calculations are also unfinished.
