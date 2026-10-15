@@ -1,0 +1,190 @@
+DEPENDENCY AUDIT - 2026-10-14 (Asia/Calcutta)
+
+Project: D:/Projects/Internet-Traffic-Forecasting-for-Intelligent-Bandwidth-Prediction
+Environment: VirtEnv/Scripts/python.exe
+Scope: all 15 current Python source/test files, requirements, documented
+commands, local module imports, and required data/result files.
+
+CURRENT DIRECT PACKAGE DEPENDENCIES
+Python: 3.12.10, 64-bit Windows (tested version).
+numpy==2.3.0: window arrays, standardization, metrics and baseline forecasts.
+matplotlib==3.10.0: preparation, comparison and learning-curve figures.
+torch==2.14.1+cu130: LSTM, checkpoints, optimization and tensor data loading.
+
+requirements.txt installs preparation/baseline dependencies.
+requirements-training.txt adds torch==2.14.1 (general installation).
+requirements-cuda.txt pins the tested torch==2.14.1+cu130 build and supplies
+the official CUDA 13.0 wheel index. Use one training installation.
+The installed +cu130 version also satisfies the general torch==2.14.1 pin.
+No additional packages needed installation during this audit.
+
+NumPy/Matplotlib/PyTorch are the only third-party imports in current scripts.
+TensorFlow, torchvision, torchaudio, pandas, scikit-learn, Streamlit, pytest,
+and a separate XML parser are not needed by the current implementation.
+Tests use Python's built-in unittest. CESNET files are CSV, not GÉANT XML.
+GRU and Transformer can use the existing PyTorch dependency when implemented.
+Streamlit remains a future dashboard dependency; no dashboard code exists yet.
+
+INSTALLED SUPPORTING PACKAGES (managed automatically by pip)
+contourpy 1.4.0; cycler 0.12.1; fonttools 4.66.1; kiwisolver 1.5.1;
+packaging 26.3; pillow 12.3.0; pyparsing 3.3.3;
+python-dateutil 2.9.0.post0; six 1.17.0; filelock 4.1.1;
+typing_extensions 4.16.0; setuptools 84.0.0; sympy 1.14.0;
+mpmath 1.3.0; networkx 3.7; Jinja2 3.1.6; MarkupSafe 3.0.4;
+fsspec 2026.9.0. pip 25.0.1 is the installed package manager.
+These versions record the current environment; requirements files pin direct
+packages, not every transitive package. This is not a full environment lock.
+
+SOURCE MODULE DEPENDENCIES
+audit_sample.py: standard library only.
+mark_segments.py: standard library only.
+inspect_outage.py: standard library only.
+mark_exclusions.py: standard library only.
+download_data.py: standard library only (urllib, tarfile, hashlib, pathlib).
+compare_institutions.py: mark_exclusions; standard library.
+build_features.py: mark_exclusions; standard library.
+prepare_dataset.py: mark_segments, mark_exclusions, build_features;
+  NumPy and Matplotlib (plotting imported inside the plot function).
+forecast_metrics.py: NumPy.
+evaluate_baselines.py: forecast_metrics; NumPy and Matplotlib.
+lstm_model.py: PyTorch.
+train_lstm.py: lstm_model, forecast_metrics, evaluate_baselines;
+  PyTorch, NumPy and Matplotlib. Baseline helper source is required even
+  when no saved baseline result folder is supplied.
+test_preparation.py: prepare_dataset and NumPy.
+test_baselines.py: evaluate_baselines, forecast_metrics and NumPy.
+test_lstm.py: lstm_model and PyTorch.
+All local imported modules are present in this checkout.
+
+FILE DEPENDENCIES AND EXECUTION ORDER
+1. Acquisition: download_data.py needs Internet access to the v1 Zenodo
+   record (https://zenodo.org/records/13382427). It verifies both archives
+   by published MD5 and extracts the two sample files. Complete existing
+   archives are reused after verification; incomplete .part files restart.
+2. audit_sample.py, mark_segments.py and inspect_outage.py need:
+   data/raw/cesnet/sample/institution_0.csv
+   data/raw/cesnet/sample/times_10_minutes.csv
+3. mark_exclusions.py needs data/inspection/institution_0_segments.csv.
+4. build_features.py needs data/inspection/institution_0_review.csv.
+5. prepare_dataset.py runs steps 3/4 and segment labeling automatically;
+   its external inputs are the two raw samples. It produces features,
+   all 10/30/60-minute windows, scalers, configuration and quality outputs.
+6. evaluate_baselines.py needs matching windows_<horizon>min.npz/.csv
+   and preparation_config.json in data/prepared/.
+7. train_lstm.py needs those three prepared files plus
+   scalers_<horizon>min.json. CPU or CUDA execution is selectable.
+   Saved baselines are optional for standalone LSTM evaluation. If a
+   baseline run_config.json exists, matching metrics.csv and predictions.csv
+   are required for comparison; prepared-file hashes must agree. Run the
+   baseline command before training for the documented comparison workflow.
+   This comparison check currently occurs after training; stale/incomplete
+   baseline folders should be regenerated before starting another run.
+8. compare_institutions.py separately needs the COMPLETE institutions.tar.gz
+   and the sample timestamp map. It is not a prerequisite for retraining the
+   already-selected institution 0 pipeline.
+
+CURRENT FILE AVAILABILITY
+Both required raw sample CSVs: present.
+Prepared NPZ/CSV/scaler files for 10, 30, 60 minutes: present.
+Preparation configuration: present.
+10-minute baseline metrics, predictions and run configuration: present.
+10-minute LSTM metrics, predictions, run configuration and checkpoint: present.
+Complete institutions.tar.gz and times.tar.gz in this checkout: absent.
+institutions.tar.gz.part: present, 134,217,728 bytes; not a usable full archive.
+Consequently the institution-wide comparison cannot currently be rerun in
+this checkout without obtaining the complete institution archive.
+No download or replacement of the partial archive was performed in this audit.
+Data and results are Git-ignored: a fresh clone must obtain raw inputs and
+regenerate artifacts. Proposal/paper files are optional references, not
+dependencies for code execution.
+
+HARDWARE AND VERIFICATION
+CUDA availability: True.
+PyTorch-reported CUDA runtime: 13.0.
+GPU: NVIDIA GeForce RTX 4050 Laptop GPU.
+Small LSTM forward checks: NumPy-to-tensor conversion succeeded; CPU and
+GPU each returned shape (2,) for input (2, 18, 8); GPU output was finite.
+pip check: No broken requirements found.
+All 10 existing preparation, baseline and LSTM tests passed.
+pip installation dry runs found the general and CUDA requirements already
+satisfied in VirtEnv. A new-environment download was not attempted.
+No full training or forecast regeneration was performed during this audit.
+
+GIT BASH COMMANDS FROM THE PROJECT ROOT
+For an existing environment:
+source VirtEnv/Scripts/activate
+python -m pip check
+python -c "import numpy, matplotlib, torch; print(torch.__version__); print(torch.cuda.is_available())"
+
+For a fresh environment using the tested Windows GPU build:
+python -m venv VirtEnv
+source VirtEnv/Scripts/activate
+python -m pip install -r requirements-cuda.txt
+python -m pip check
+python download_data.py
+python prepare_dataset.py
+python -m unittest -v test_preparation test_baselines test_lstm
+python evaluate_baselines.py --horizon 10
+python train_lstm.py --horizon 10 --device cuda
+
+General training installation: use requirements-training.txt instead of
+requirements-cuda.txt and --device cpu for CPU execution.
+
+CHANGES MADE
+Added the CUDA requirements file and its README installation instructions.
+Documented the download helper, incomplete archive status, dependency scope,
+and generated-file order. Changed portable command-block labels to bash.
+Removed the README assumption that optional paper files exist in this clone.
+Preserved the installed packages, source-model behavior, raw data and results.
+Roadmap status unchanged: Day 2 complete; Day 3 allocation step still pending.
+
+FOLLOW-UP - INITIAL ALLOCATION STEP (2026-10-14)
+Two additional Python files bring the source/test total to 17.
+evaluate_allocation.py: NumPy and the standard library; no new packages.
+test_allocation.py: evaluate_allocation, NumPy and unittest.
+Allocation inputs: data/prepared/windows_10min.npz/.csv, scalers_10min.json,
+preparation_config.json, plus predictions.csv/run_config.json from each of
+results/baselines/10min/ and results/lstm/10min/. All were present; prepared
+hashes, IDs, timestamps, actual targets and historical baselines were checked.
+Outputs: results/allocation/10min/{metrics.csv,replay.csv,
+default_test_metrics.csv,run_config.json}. Model retraining is not required.
+The six allocation tests passed in addition to the ten existing tests.
+Updated roadmap status: Day 3 initial allocation checkpoint is complete.
+
+DAY 4 UPDATE - 2026-10-15
+Source layout: data_processing/, models/, experiments/, tests/.
+Old root-file commands above are historical; current commands use python -m.
+Added models/gru_model.py (PyTorch), experiments/train_gru.py
+(shared trainer), tests/test_gru.py (existing model behavior checks for GRU).
+No new package dependencies. All 19 tests pass after import/path updates.
+
+DAY 4 TRANSFORMER UPDATE - 2026-10-15
+Added models/transformer_model.py and tests/test_transformer.py (PyTorch),
+experiments/train_transformer.py (entry point), experiments/train_neural.py
+(shared training logic). train_lstm.py remains a compatible entry point;
+train_gru.py now imports the common trainer directly.
+No new third-party packages. Inputs and generated output locations follow
+the existing neural workflow. Transformer comparison additionally reads saved
+LSTM and GRU forecasts/metrics when those artifacts are present.
+24 unit tests passed; checkpoint/metrics/source-hash verification passed.
+
+DAY 4 DASHBOARD DEPENDENCY UPDATE - 2026-10-15
+Current direct third-party imports across the full project: NumPy,
+Matplotlib, PyTorch, Streamlit, pandas and Plotly. The last three are new
+UI dependencies, pinned in requirements-dashboard.txt to 1.66.0, 3.0.6, 7.1.0.
+Their supporting packages are installed automatically; no complete transitive
+lockfile is claimed. pip check passed. PyTorch/CUDA were not replaced.
+Dashboard requires saved forecasting metrics.csv, predictions.csv and
+run_config.json from complete model runs in results/<model>/<horizon>min/.
+Baseline directory contains persistence and moving-average results together.
+Allocation additionally reads results/allocation/10min/metrics.csv and
+run_config.json plus the referenced forecast source CSVs/configurations.
+It recomputes capacity from saved forecasts; replay.csv is not required for
+viewing the app. Raw files, NPZs, scalers and model checkpoints are not loaded.
+Source helpers import NumPy/forecast_metrics/evaluate_allocation, not trainers.
+Tests/test_dashboard.py additionally uses Streamlit AppTest and independent
+fixtures. Full test discovery requires training plus dashboard requirements;
+dashboard-only checks work without PyTorch. All 31 tests passed.
+Browser QA used the bundled Node/Playwright runtime and installed Edge;
+Playwright is not an application dependency or a new VirtEnv package.
+Launch: python -m streamlit run dashboard/app.py (from repository root).

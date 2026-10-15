@@ -6,17 +6,19 @@ from pathlib import Path
 
 import torch
 
-from lstm_model import TrafficLSTM
+from models.lstm_model import TrafficLSTM
 
 
 class LSTMTests(unittest.TestCase):
+    model_class = TrafficLSTM
+
     @classmethod
     def setUpClass(cls):
         torch.set_num_threads(1)
 
     def test_optimizer_step_has_finite_gradients_and_changes_weights(self):
         torch.manual_seed(42)
-        model = TrafficLSTM()
+        model = self.model_class()
         inputs, targets = torch.randn(8, 18, 8), torch.randn(8)
         optimizer = torch.optim.Adam(model.parameters(), lr=.001)
         before = model.output.weight.detach().clone()
@@ -30,7 +32,7 @@ class LSTMTests(unittest.TestCase):
 
     def test_windows_do_not_share_hidden_state(self):
         torch.manual_seed(42)
-        model = TrafficLSTM().eval()
+        model = self.model_class().eval()
         inputs = torch.randn(3, 18, 8)
         with torch.inference_mode():
             together = model(inputs)
@@ -40,12 +42,12 @@ class LSTMTests(unittest.TestCase):
 
     def test_checkpoint_restores_predictions(self):
         torch.manual_seed(42)
-        model = TrafficLSTM().eval()
+        model = self.model_class().eval()
         inputs = torch.randn(2, 18, 8)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "weights.pt"
             torch.save(model.state_dict(), path)
-            restored = TrafficLSTM().eval()
+            restored = self.model_class().eval()
             restored.load_state_dict(torch.load(path, weights_only=True))
             with torch.inference_mode():
                 torch.testing.assert_close(model(inputs), restored(inputs))

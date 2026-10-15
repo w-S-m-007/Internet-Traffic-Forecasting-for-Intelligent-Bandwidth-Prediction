@@ -4,8 +4,8 @@ import unittest
 
 import numpy as np
 
-from evaluate_baselines import moving_average_4, persistence
-from forecast_metrics import forecast_metrics
+from experiments.evaluate_baselines import moving_average_4, persistence
+from experiments.forecast_metrics import forecast_metrics
 
 
 class BaselineTests(unittest.TestCase):

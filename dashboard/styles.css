@@ -1,0 +1,12 @@
+.block-container { max-width: 1720px; padding: 1.6rem 2rem 2rem; }
+[data-testid="stSidebar"] { border-right: 1px solid #dfe8ed; }
+[data-testid="stSidebar"] h1 { font-size: 1.45rem; letter-spacing: -0.04rem; }
+h1 { font-size: 2rem; letter-spacing: -0.055rem; padding-bottom: 0.2rem; }
+h3 { font-size: 1.14rem; letter-spacing: -0.02rem; }
+[data-testid="stMetric"] { background: white; border: 1px solid #dfe8ed; border-radius: 12px; padding: 12px 16px; }
+[data-testid="stMetricValue"] { font-size: 1.85rem; font-weight: 650; }
+[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 12px; }
+.subheading { color: #64758d; margin: -0.3rem 0 1rem; }
+.offline-badge { display: inline-block; padding: 6px 11px; border-radius: 7px; background: #e0f4f4; color: #007e87; font-size: 0.8rem; font-weight: 600; }
+.sidebar-note { font-size: 0.8rem; color: #64758d; }
+@media (max-width: 900px) { .block-container { padding: 1rem; } h1 { font-size: 1.6rem; } }

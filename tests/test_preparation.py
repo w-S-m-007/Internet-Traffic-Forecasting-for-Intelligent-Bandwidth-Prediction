@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from prepare_dataset import FEATURES, HISTORY, fit_scalers, select_windows, window_features
+from data_processing.prepare_dataset import FEATURES, HISTORY, fit_scalers, select_windows, window_features
 
 
 class PreparationTests(unittest.TestCase):

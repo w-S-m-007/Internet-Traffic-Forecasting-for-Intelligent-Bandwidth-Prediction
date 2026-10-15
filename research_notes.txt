@@ -5,8 +5,8 @@ STATUS
 The archives are checksum verified and all 283 institution series compared.
 Institution 0 is selected. Day 2 preprocessing, features, splits, windows,
 training-only scalers, plots, and preparation checks are complete.
-Day 3's 10-minute baselines have been evaluated on validation and test data.
-No neural-model training or allocation performance evaluation has occurred.
+The 10-minute baselines and first LSTM have been trained/evaluated as applicable.
+Initial allocation performance evaluation has not yet occurred.
 Do not use GÉANT findings as CESNET findings.
 
 SOURCES
@@ -653,3 +653,361 @@ accuracy result from a completed experiment has been saved.
 ROADMAP: Day 3 remains in progress. LSTM implementation and CPU checks are
 ready; the first full training/evaluation run waits for the user's CUDA setup.
 Initial forecast-to-allocation calculations are also unfinished.
+
+DAY 3: FIRST FULL LSTM EXPERIMENT - VERIFIED LOCALLY, 2026-10-14
+Active checkout: D:/Projects/Internet-Traffic-Forecasting-for-Intelligent-Bandwidth-Prediction.
+Active environment: VirtEnv, Python 3.12.10, PyTorch 2.14.1+cu130,
+NumPy 2.3.0, Matplotlib 3.10.0. CUDA is available on the RTX 4050 Laptop GPU.
+The missing NumPy warning was resolved by installing requirements.txt.
+The user's CUDA-enabled PyTorch build was retained. VirtEnv is now Git-ignored.
+
+MIGRATION AND REGENERATION
+The fresh checkout lacked the earlier uncommitted Day 3 scripts and prepared
+artifacts. Missing source files were restored from the prior local checkout.
+The two raw sample CSVs were copied after SHA256 verification against the
+previous preparation manifest. Existing files and the user's download helper
+and partial archive were preserved. Preparation and baseline evaluation were
+regenerated in the active environment, preserving the original counts and
+baseline accuracy results. All ten unit tests passed before GPU training.
+
+REPRODUCE IN GIT BASH WITH VirtEnv ACTIVE
+python prepare_dataset.py
+python -m unittest -v test_preparation test_baselines test_lstm
+python evaluate_baselines.py --horizon 10
+python train_lstm.py --horizon 10 --device cuda
+
+ACTUAL TRAINING RUN
+Settings remained the previously documented fixed settings: 2 layers, 64
+hidden units, 52,289 parameters, dropout zero, Adam learning rate 0.001,
+batch 64, seed 42, maximum 30 epochs, patience 5, min_delta 0.
+Training ended after epoch 20; best checkpoint came from epoch 15.
+Best validation scaled MSE: 0.15020661775449776.
+Training time: 90.35195970000495 seconds, including validation and improved
+checkpoint saves, excluding data loading and final evaluation.
+Run timestamp stored in UTC: 2026-10-13T21:59:06.518756+00:00;
+the local Asia/Calcutta research-entry date is October 14.
+
+LSTM RESULTS - ORIGINAL NOMINAL RECORDED UNITS
+Validation: 4,029 observations; MAE 24.89033341634829 Mbps;
+RMSE 34.6060070298149 Mbps; MAPE 15.477839945274585%;
+R2 0.8286389657125179.
+Test: 5,554 observations; MAE 21.148372306981358 Mbps;
+RMSE 31.17530406571691 Mbps; MAPE 21.191093862489048%;
+R2 0.7196290062313953.
+MAPE exclusions: zero in both splits. Negative predictions: zero in both
+splits. No forecast clipping was used for these accuracy metrics.
+CPU inference: validation 1.023477599999751 ms/forecast;
+test 0.9596024999991641 ms/forecast, using the recorded 25/1000 protocol,
+one CPU thread, preloaded tensors, and inverse output scaling.
+
+INTERPRETATION - MIXED COMPARISON
+LSTM has lower MAE and RMSE than persistence. Relative to the four-observation
+average, LSTM lowers test RMSE (31.175 versus 32.478 Mbps), while its MAE is
+slightly higher (21.148 versus 21.025 Mbps) and MAPE is higher (21.191 versus
+20.608%). Do not describe this as a win on every metric or proof of universal
+LSTM superiority. Only one fixed seed was evaluated. Test results did not
+select the checkpoint or change the model settings.
+
+ARTIFACTS AND FINAL CHECKS
+Evidence: results/lstm/10min/metrics.csv, comparison.csv, predictions.csv,
+training_history.csv, run_config.json, best_model.pt, scaler/preparation
+configuration JSON files, test_prefix.png, and learning_curve.png.
+The saved best checkpoint reproduced all 9,583 validation/test predictions
+within the floating-point check tolerance. Actual targets matched saved
+preparation arrays. Recomputed metrics matched the metric CSV. Best epoch
+matched the minimum validation loss in training history. Raw source and
+prepared artifact SHA256 hashes matched the recorded run configuration.
+Both figures were visually reviewed; comparison caption was corrected to
+cover the neural model and baselines without changing predictions or scores.
+
+ROADMAP: Day 3's first forecasting experiment is complete. The Day 3
+forecast-to-allocation checkpoint remains open until the initial capacity
+calculation is implemented. No GRU, Transformer, additional-horizon training,
+or dashboard has been implemented yet.
+
+DEPENDENCY AUDIT - 2026-10-14
+Reviewed all 15 Python files, imports, requirements and artifact dependencies.
+Direct third-party dependencies are NumPy 2.3.0, Matplotlib 3.10.0 and
+PyTorch 2.14.1+cu130 in Python 3.12.10. TensorFlow is not required.
+pip check found no broken requirements; all ten existing tests passed.
+A small LSTM CPU/GPU forward check and NumPy-to-tensor conversion passed.
+No packages were changed and the model was not retrained for this audit.
+Added requirements-cuda.txt to pin the actual tested CUDA build and clarified
+Git Bash installation/acquisition commands in README.md. Transitive versions
+are recorded in dependency_audit.txt; requirements are not a full lockfile.
+Both raw sample CSVs and prepared horizons/results are available. Complete
+CESNET archives are absent in this checkout; the retained 128 MiB partial
+institution archive cannot support the institution-wide comparison. This
+is not a blocker for the current institution 0 forecasting experiment.
+All source and generated-file dependencies are listed in dependency_audit.txt.
+Day 3's initial allocation step remains pending.
+
+INITIAL ALLOCATION REPLAY - 2026-10-14
+Added evaluate_allocation.py and six behavioral checks in test_allocation.py.
+No new package dependencies or model training were needed. The command reads
+saved 10-minute forecasts and checks prepared hashes, target IDs, timestamps,
+splits, actual demand, and historical baseline definitions before allocation.
+Reactive capacity is the last available observed nominal demand times the
+margin. Proactive policies use the moving-average or LSTM forecasts, clamped
+at zero only when computing capacity. Each policy uses margins 5/10/15/20%.
+
+CESNET INTERVAL UNITS
+The interval is 600 seconds, not the original GEANT plan's 900 seconds.
+Deficit volume in decimal MB = sum(max(actual-capacity,0)) * 600 / 8.
+Flat traffic: 100 Mbps demand with 10% margin gives 110 Mbps capacity and no
+shortfall. A jump to 200 Mbps with capacity still 110 Mbps gives a 90 Mbps
+deficit, equivalent to 6,750 MB over one nominal 10-minute interval.
+This is simulated unserved demand, not observed packet loss.
+Mean overprovision is mean(max(capacity-actual,0)); aggregate utilization is
+sum(min(actual,capacity))/sum(capacity), undefined for zero total capacity.
+The simulation covers only eligible intervals, without integrating exclusions.
+
+VALIDATION SELECTION - UNMET 1% TARGET
+Default margins are selected separately per policy on validation only, by
+lowest mean capacity subject to <=1% shortfall intervals. No candidate met
+that target. The prespecified 20% fallback was therefore used by all policies.
+Validation shortfall percentages at 20%: reactive 19.68230330106726;
+moving average 16.306775874906926; LSTM 13.452469595433108.
+Do not imply the fallback satisfies the service target. No margins were
+increased or model settings changed after looking at test outcomes.
+
+TEST RESULTS AT IDENTICAL 20% MARGIN - 5,554 INTERVALS
+Reactive: 1,302 shortfall intervals (23.44256391789701%); mean capacity
+140.21410169993518 Mbps; deficit volume 2127195.5487402007 MB;
+mean overprovision 28.47770175462777 Mbps; served/capacity 0.7968984473789132.
+Moving average: 1,047 shortfall intervals (18.851278357940224%); mean capacity
+140.19131900084335 Mbps; deficit volume 1685298.9022665 MB;
+mean overprovision 27.394070066282076 Mbps; served/capacity 0.8045951043080116.
+LSTM: 603 shortfall intervals (10.857039971191934%); mean capacity
+148.66915228140374 Mbps; deficit volume 1102083.2872880015 MB;
+mean overprovision 34.471793840232195 Mbps; served/capacity 0.7681308239722564.
+Interpretation: LSTM reduces shortfall frequency and volume but allocates more
+capacity and has more unused capacity than reactive allocation. Report both
+sides of this tradeoff. Results concern an abstract capacity pool from the
+selected institution's nominal recorded traffic, not physical link control.
+
+EVIDENCE AND ROADMAP
+results/allocation/10min/metrics.csv: all 24 policy/split/margin comparisons.
+replay.csv: 114,996 interval-policy-margin rows (4,029 validation and 5,554
+test intervals, each evaluated under 3 policies and 4 margins).
+default_test_metrics.csv: test results at validation-selected margins.
+run_config.json: formulas, limitations, selection evidence and source hashes.
+All summaries were independently recomputed from the replay and agreed.
+Recorded source hashes were rechecked and unchanged.
+The combined preparation/baseline/LSTM/allocation suite passed all 16 tests.
+Day 3's initial forecast-to-allocation checkpoint is complete. Next is Day 4:
+GRU/Transformer comparisons, then the dashboard shell. Full allocation review
+and final model comparisons remain later milestones. No Git commit or push.
+
+DAY 4 DIRECTORY ORGANIZATION AND FIRST GRU - 2026-10-15
+Moved Python source into data_processing/, models/, experiments/, tests/.
+Run modules from the repository root; data/ and results/ retain their paths.
+Commands: python -m unittest discover -s tests -v;
+python -m experiments.train_gru --horizon 10 --device cuda.
+GRU uses shared LSTM training logic and identical fixed settings; 39,233
+parameters versus 52,289 for LSTM. No model tuning used test scores.
+Epochs 18; best epoch 13; training time 72.26212050000322 seconds.
+{
+  "gru_metrics": [
+    {
+      "model": "gru",
+      "horizon_minutes": "10",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "24.79447443216326",
+      "rmse_mbps": "34.55655759088693",
+      "mape_pct": "15.312280581652612",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8291283404525905",
+      "training_time_s": "72.26212050000322",
+      "cpu_inference_ms": "2.628173799981596"
+    },
+    {
+      "model": "gru",
+      "horizon_minutes": "10",
+      "split": "test",
+      "n_samples": "5554",
+      "mae_mbps": "20.90999079875901",
+      "rmse_mbps": "31.00571809446532",
+      "mape_pct": "20.921223120340784",
+      "mape_included": "5554",
+      "mape_excluded": "0",
+      "r2": "0.7226710080186046",
+      "training_time_s": "72.26212050000322",
+      "cpu_inference_ms": "2.591001299995696"
+    }
+  ]
+}
+All 19 tests passed. Saved checkpoint forecasts and recomputed metrics
+were verified. Existing data and previous result hashes stayed unchanged.
+Evidence: results/gru/10min/ metrics, comparison, predictions, checkpoint,
+configuration and figures. Only one fixed seed; do not claim universal superiority.
+Day 4 remains open: Transformer and dashboard shell are still pending.
+
+DAY 4 TRANSFORMER SETTINGS RECORDED BEFORE TRAINING - 2026-10-15
+Two independently initialized encoder layers; dimension 64; four attention
+heads; feed-forward width 128; GELU; dropout zero; post-norm LayerNorm with
+epsilon 1e-5. Linear 8-to-64 input projection and scalar output from the last
+historical position. Fixed sinusoidal positional encoding over 18 history
+positions. Parameter count: 67,585. Full attention is confined to available
+history; no target token or future observation enters the model.
+Training retains seed 42, Adam 0.001, batch 64, maximum 30 epochs, validation
+MSE checkpoint selection and early-stopping patience five. Inputs, splits,
+scalers and evaluation definitions remain shared with LSTM/GRU. These extra
+architecture choices are fixed before training, not tuned to test outcomes.
+Use the SDPA mathematical attention backend and disable the MHA evaluation
+fastpath to keep the attention implementation consistent for this experiment.
+No claim of bitwise reproducibility across platforms or package versions.
+Shared training logic now lives in experiments/train_neural.py; existing
+train_lstm and train_gru module commands remain available as entry points.
+New command: python -m experiments.train_transformer --horizon 10 --device cuda.
+PyTorch API references checked against the installed version and official docs:
+https://docs.pytorch.org/docs/2.14/generated/torch.nn.TransformerEncoderLayer.html
+https://docs.pytorch.org/docs/2.14/generated/torch.nn.attention.sdpa_kernel.html
+All 24 tests passed before training, including five Transformer behavior checks.
+
+DAY 4 FIRST TRANSFORMER RESULT - 2026-10-15
+Training completed 13 epochs; validation chose epoch 8.
+Training time 145.14280130001134 seconds.
+{
+  "transformer_metrics": [
+    {
+      "model": "transformer",
+      "horizon_minutes": "10",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "25.40798167940574",
+      "rmse_mbps": "34.84157475869212",
+      "mape_pct": "16.393254266103423",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8262980702800151",
+      "training_time_s": "145.14280130001134",
+      "cpu_inference_ms": "2.2039267000218388"
+    },
+    {
+      "model": "transformer",
+      "horizon_minutes": "10",
+      "split": "test",
+      "n_samples": "5554",
+      "mae_mbps": "20.745582989350865",
+      "rmse_mbps": "30.802754405776252",
+      "mape_pct": "21.864333207544224",
+      "mape_included": "5554",
+      "mape_excluded": "0",
+      "r2": "0.7262899201880297",
+      "training_time_s": "145.14280130001134",
+      "cpu_inference_ms": "2.0679477999801748"
+    }
+  ]
+}
+Checkpoint restoration reproduced all 9,583 validation/test predictions
+within rtol=1e-5, atol=1e-4 Mbps. Recomputed metrics matched CSV, best epoch
+matched minimum validation loss, and parameter count matched 67,585.
+All five predictors matched the same timestamped targets. All ten
+comparison rows exactly matched their original metric files.
+All 43 existing preparation and previous result hashes were unchanged;
+raw CSV hashes also matched the preparation manifest. No earlier model was
+retrained for this step. All 24 unit tests passed before training.
+Evidence: results/transformer/10min/metrics.csv, predictions.csv,
+comparison.csv, best_model.pt, run_config.json, training_history.csv,
+scalers.json, preparation_config.json, test_prefix.png, learning_curve.png.
+These results use one fixed seed and one institution. Do not retune from
+test scores or claim universal superiority. Architecture parameter counts and
+attention implementation differ; timing is machine-dependent.
+ROADMAP: all three neural models and two baselines now have 10-minute
+results. Day 4 remains open for the dashboard shell. Day 5 still needs all
+30/60-minute predictor comparisons. Existing allocation remains reactive,
+moving-average and LSTM only; GRU/Transformer allocation review comes later.
+
+TRANSFORMER INTERPRETATION AND VISUAL CHECK - 2026-10-15
+Test comparison, original nominal recorded Mbps:
+Persistence: MAE 24.287000236437404; RMSE 38.629073935980514;
+MAPE 22.933334600940068%; R2 0.5695325887222151.
+Moving average: MAE 21.025244404157363; RMSE 32.47779041153574;
+MAPE 20.60756858017447%; R2 0.6957121338730564.
+LSTM: MAE 21.148372306981358; RMSE 31.17530406571691;
+MAPE 21.191093862489048%; R2 0.7196290062313953.
+GRU: MAE 20.90999079875901; RMSE 31.00571809446532;
+MAPE 20.921223120340784%; R2 0.7226710080186046.
+Transformer: MAE 20.745582989350865; RMSE 30.802754405776252;
+MAPE 21.864333207544224%; R2 0.7262899201880297.
+Source for these values: results/transformer/10min/comparison.csv.
+The Transformer has the lowest test MAE/RMSE among these five fixed predictors,
+but worse MAPE than moving average, LSTM and GRU. Moving average has the lowest
+MAPE. Validation RMSE ranks GRU ahead of LSTM ahead of Transformer; a lower
+test error does not authorize choosing hyperparameters or checkpoints from
+test data. Avoid a blanket claim that one model is best in every respect.
+Both saved Transformer figures were visually checked. The first test-day
+plot shows sudden spikes remain difficult; the full scores cover all 5,554
+test intervals, not just the 144 plotted observations. The learning curve
+shows fluctuating validation errors despite decreasing training error.
+No settings were changed after seeing these results. No other models were
+retrained. Dashboard shell remains the next Day 4 task.
+
+DAY 4 DASHBOARD COMPLETED - 2026-10-15
+Implemented the reviewed layout as a local Streamlit application in dashboard/.
+Entry point: dashboard/app.py; helpers: artifacts.py, charts.py, styles.css.
+Added .streamlit/config.toml with light/teal theme, local loopback binding and
+usage telemetry disabled. Launch from Git Bash, at the project root:
+source VirtEnv/Scripts/activate
+python -m pip install -r requirements-dashboard.txt
+python -m streamlit run dashboard/app.py
+Local URL: http://127.0.0.1:8501. No publication or external controller action.
+
+UI DEPENDENCIES AND BOUNDARIES
+Installed Streamlit 1.66.0, pandas 3.0.6 and Plotly 7.1.0 via the pinned
+requirements-dashboard.txt. Existing NumPy/Matplotlib/PyTorch versions were
+retained; pip check reports no broken requirements. A fresh-process import
+confirmed the dashboard does not import PyTorch. It reads saved CSV/JSON
+artifacts and does not train models, read checkpoints, or require CUDA.
+No dataset archives or raw sample CSVs are needed just to view saved results.
+
+FEATURES AND SCIENTIFIC MEANING
+Overview, Forecasts, Comparison and Allocation views; all five predictors;
+validation/test selection; available horizons; manual historical replay;
+UTC hover charts; full-split forecasting metrics and comparison; CSV downloads.
+Only 10-minute forecast results currently exist. Allocation has an independent
+LSTM/moving-average selector and the evaluated 5/10/15/20% margin controls.
+GRU/Transformer allocation is not presented as an evaluated experiment.
+Changing replay position changes visible history and the interval readout,
+not the full-split scores. Changing margin recomputes the same allocation
+formula for saved forecasts; it does not alter validation defaults or files.
+The unmet 1% validation target and 20% fallback remain explicit. No real-time
+traffic, measured packet loss, physical routing or latency is implied.
+Missing/excluded intervals remain gaps in plots, not filled or joined lines.
+
+ARTIFACT CHECKS
+Loader checks common preparation signatures, model and target identities,
+UTC origin/target interval duration, shared observations, nonnegative actual
+demand, finite forecasts and recomputed saved forecasting metrics. Allocation
+validates forecast-source hashes, all saved margin/split scores and defaults
+selected from validation only. Source file mtimes/sizes invalidate the cache
+on rerun. Inconsistent files produce explanatory errors; missing allocation
+can be reported while forecasting remains available. An empty checkout shows
+the commands needed to generate artifacts rather than invented sample data.
+
+VALIDATION
+All 31 tests passed (24 prior checks plus seven dashboard checks). Dashboard
+tests use small independent temporary fixtures, not Git-ignored real data.
+Checks cover model/split/page/margin interactions, replay controls, chart gap
+handling, corrupt metrics, mismatched targets, stale allocation sources and
+empty-results handling. Streamlit AppTest emits a benign missing-context
+warning when invoked outside the actual server; tests pass with no UI errors.
+A real Edge browser check confirmed initial metrics 21.148/31.175 Mbps,
+21.19% MAPE, R2 0.720; changing to Transformer displayed 20.746 Mbps MAE;
+navigation and keyboard margin changes worked. No browser page errors.
+QA artifacts: results/dashboard/dashboard-overview.png,
+dashboard-allocation.png and browser-check.json. These are local, Git-ignored.
+The 43 earlier preparation/result hashes and both raw sample hashes remained
+unchanged. No earlier experiment or model was retrained in this dashboard step.
+
+ROADMAP
+Day 4 is complete: LSTM/GRU/Transformer 10-minute comparisons and dashboard
+shell work. Next is Day 5: complete all five predictors at 30 and 60 minutes.
+Full allocation review, final dashboard polish, reporting and presentation
+remain later work. Do not describe the overall ten-day project as complete.
+References for interface/testing APIs:
+https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest
+https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart

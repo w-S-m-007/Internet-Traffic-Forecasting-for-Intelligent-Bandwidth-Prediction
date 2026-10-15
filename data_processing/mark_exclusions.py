@@ -13,10 +13,10 @@ REASON = "reported_probe_outage_with_one_day_buffer"
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     source = project / "data/inspection/institution_0_segments.csv"
     if not source.exists():
-        raise FileNotFoundError("Run python mark_segments.py before this script")
+        raise FileNotFoundError("Run python -m data_processing.mark_segments before this script")
     with source.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         columns = reader.fieldnames

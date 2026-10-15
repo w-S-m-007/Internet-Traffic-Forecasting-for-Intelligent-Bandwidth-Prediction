@@ -10,7 +10,7 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-from mark_exclusions import EXCLUDE_FIRST, EXCLUDE_LAST
+from data_processing.mark_exclusions import EXCLUDE_FIRST, EXCLUDE_LAST
 
 
 def summarize(institution_id, rows, times) -> dict[str, Any]:
@@ -104,7 +104,7 @@ def summarize(institution_id, rows, times) -> dict[str, Any]:
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     raw = project / "data/raw/cesnet"
     with (raw / "sample/times_10_minutes.csv").open(newline="", encoding="utf-8-sig") as handle:
         mapping = list(csv.DictReader(handle))
@@ -162,7 +162,7 @@ def main():
                      f"{result['longest_safe_run_rows']} | {result['prospective_60min_windows']} | "
                      f"{result['mean_n_bytes']:.2f}")
     lines.extend(["", "Details: data/inspection/institution_comparison.csv",
-                  "Reproduce: python compare_institutions.py"])
+                  "Reproduce: python -m data_processing.compare_institutions"])
     report = output.with_suffix(".txt")
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))

@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     sample = project / "data/raw/cesnet/sample"
     with (sample / "times_10_minutes.csv").open(newline="", encoding="utf-8-sig") as handle:
         time_rows = list(csv.DictReader(handle))
@@ -100,7 +100,7 @@ def main():
         "This audit does not determine whether a probe outage affects this institution.",
         "No anomaly thresholds, cleaning, filling, resampling, or Mbps conversion applied.",
         "Do not infer missing-interval counts from irregular gaps without examining them.",
-        "Reproduce: python audit_sample.py"])
+        "Reproduce: python -m data_processing.audit_sample"])
     output = project / "data/inspection/institution_0_audit.txt"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")

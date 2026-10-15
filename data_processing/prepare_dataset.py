@@ -9,9 +9,9 @@ from typing import TypedDict
 
 import numpy as np
 
-import build_features
-import mark_exclusions
-import mark_segments
+from data_processing import build_features
+from data_processing import mark_exclusions
+from data_processing import mark_segments
 
 
 HISTORY = 18
@@ -70,7 +70,7 @@ def save_csv(path, columns, rows):
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     raw = project / "data/raw/cesnet/sample"
     source_hashes = {name: hashlib.sha256((raw / name).read_bytes()).hexdigest()
                      for name in ["institution_0.csv", "times_10_minutes.csv"]}

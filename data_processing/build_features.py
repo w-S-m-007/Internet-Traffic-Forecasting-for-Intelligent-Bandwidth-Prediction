@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
-from mark_exclusions import EXCLUDE_FIRST, EXCLUDE_LAST
+from data_processing.mark_exclusions import EXCLUDE_FIRST, EXCLUDE_LAST
 
 
 EXTRA_COLUMNS = [
@@ -79,7 +79,7 @@ def add_features(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     source = project / "data/inspection/institution_0_review.csv"
     if not source.exists():
         raise FileNotFoundError("Run mark_segments.py and mark_exclusions.py first")

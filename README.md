@@ -4,7 +4,7 @@ An academic project investigating traffic forecasting with LSTM, GRU, and a smal
 
 ## Current progress
 
-**Day 2 data preparation is complete; Day 3 baseline evaluation is underway.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. Its archives have been downloaded and checksum verified locally. No neural models have been trained.
+**Days 2–4 are complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. All five predictors have 10-minute results, an initial allocation experiment is saved, and the local dashboard reads those artifacts without retraining.
 
 Implemented:
 
@@ -16,47 +16,84 @@ Implemented:
 - Build unscaled traffic-rate and calendar features with observation and eligibility flags.
 - Generate chronological splits, direct forecasting windows, training-only scalers, and a traffic/quality plot.
 - Check full window paths, timestamp alignment, causal features, and scaler leakage.
-- Evaluate persistence and four-observation moving-average baselines at 10 minutes.
+- Evaluate persistence, moving-average, LSTM, GRU and Transformer forecasts at 10 minutes.
+- Compare reactive and forecast-based allocation at identical safety margins.
+- Browse saved forecasts, model comparisons and allocation with a local Streamlit dashboard.
 - Record findings, evidence, and unresolved questions in the research notes.
 
-Neural-model training, remaining horizon comparisons, bandwidth-allocation simulation, and the dashboard are pending. Numerical claims in earlier research drafts are not results from this implementation.
+All five predictors have completed the 10-minute experiment. The 30/60-minute comparisons and expanded allocation review remain pending. Numerical claims in earlier research drafts are not results from this implementation.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `audit_sample.py` | Check the institution sample's values and timestamp intervals. |
-| `mark_segments.py` | Preserve original cells and add timestamp and continuous-block labels. |
-| `inspect_outage.py` | Compare raw recorded traffic before, during, and after the reported outage dates. |
-| `mark_exclusions.py` | Mark May 20–June 5, 2024, inclusive, for outage exclusion while retaining every row. |
-| `compare_institutions.py` | Compare institution candidates by byte-value quality, coverage, and prospective window availability. |
-| `build_features.py` | Add nominal traffic rate, causal input filling, calendar features, and boundary guards. |
-| `prepare_dataset.py` | Regenerate features, splits, windows, scalers, configuration, checks, and the plot from raw inputs. |
-| `test_preparation.py` | Check that exclusions and future/holdout values cannot leak into windows or training statistics. |
+| `data_processing/audit_sample.py` | Check the institution sample's values and timestamp intervals. |
+| `data_processing/mark_segments.py` | Preserve original cells and add timestamp and continuous-block labels. |
+| `data_processing/inspect_outage.py` | Compare raw recorded traffic before, during, and after the reported outage dates. |
+| `data_processing/mark_exclusions.py` | Mark May 20–June 5, 2024, inclusive, for outage exclusion while retaining every row. |
+| `data_processing/compare_institutions.py` | Compare institution candidates by byte-value quality, coverage, and prospective window availability. |
+| `data_processing/build_features.py` | Add nominal traffic rate, causal input filling, calendar features, and boundary guards. |
+| `data_processing/prepare_dataset.py` | Regenerate features, splits, windows, scalers, configuration, checks, and the plot from raw inputs. |
+| `tests/test_preparation.py` | Check that exclusions and future/holdout values cannot leak into windows or training statistics. |
 | `requirements.txt` | NumPy and Matplotlib versions used by the preparation command. |
-| `evaluate_baselines.py` | Evaluate baseline forecasts on saved validation and test windows. |
-| `forecast_metrics.py` | Compute MAE, RMSE, positive-target MAPE, and R² in original nominal units. |
-| `test_baselines.py` | Hand-check baseline behavior, metric arithmetic, and zero/constant-target cases. |
-| `lstm_model.py` | Two-layer, 64-unit LSTM with a direct scalar forecast head. |
-| `train_lstm.py` | Train using validation early stopping, restore the best checkpoint, then evaluate. |
-| `test_lstm.py` | Verify independent windows, checkpoint restoration, and finite gradient updates. |
+| `data_processing/download_data.py` | Download checksum-verified archives and extract the documented sample. |
+| `experiments/evaluate_baselines.py` | Evaluate persistence and four-observation moving averages. |
+| `experiments/forecast_metrics.py` | Shared original-unit MAE, RMSE, positive-target MAPE, and R². |
+| `models/lstm_model.py` | Compact two-layer LSTM with a scalar forecast head. |
+| `experiments/train_lstm.py` | Validation early stopping, saved checkpoints, forecasts, and baseline comparison. |
+| `experiments/train_neural.py` | Common data loading, training, checkpoint selection and evaluation for all three neural models. |
+| `models/gru_model.py`, `models/transformer_model.py` | GRU and small Transformer definitions. |
+| `experiments/train_gru.py`, `experiments/train_transformer.py` | GRU and Transformer training commands. |
+| `tests/test_baselines.py`, `tests/test_lstm.py` | Metric, model-state, checkpoint, and gradient checks. |
+| `experiments/evaluate_allocation.py` | Replay saved 10-minute forecasts at equal margins and choose defaults on validation. |
+| `tests/test_allocation.py` | Hand-check capacity arithmetic, validation selection, and forecast alignment. |
 | `requirements-training.txt` | Training dependencies, including the PyTorch version. |
+| `requirements-cuda.txt` | Exact CUDA-enabled PyTorch build used by the first experiment. |
+| `requirements-dashboard.txt` | Streamlit, pandas and Plotly for the saved-results interface. |
+| `dashboard/app.py` | Local dashboard, model/split controls, replay, comparisons and allocation. |
+| `dashboard/artifacts.py`, `dashboard/charts.py` | Validate saved results and plot real UTC timestamps with excluded gaps preserved. |
+| `dashboard/styles.css`, `.streamlit/config.toml` | Local dashboard appearance and loopback-only server settings. |
+| `tests/test_dashboard.py` | Artifact integrity and Streamlit interaction checks using independent fixtures. |
+| `dependency_audit.txt` | Package, source-module, and generated-file dependencies checked locally. |
 | `dataset_notes.md` | Dataset checklist, current inspection status, and pending decisions. |
 | `research_notes.txt` | Detailed evidence and findings for the eventual research paper. |
 
-Downloaded data, generated inspection outputs, the previous GÉANT archive, and local proposal/paper files are excluded from Git. The original proposal and drafts remain available locally in `CN Project 1.pdf` and `paper/`.
+Downloaded data, generated inspection outputs, the previous GÉANT archive, and local proposal/paper files are excluded from Git. Proposal and draft documents are optional reference material and are not required to execute this checkout.
 
 ## Requirements
 
-Python **3.12.10** was used. Inspection scripts use the standard library; preparation additionally uses NumPy 2.3.0 and Matplotlib 3.10.0. No GPU is needed.
+Python **3.12.10**, NumPy 2.3.0, and Matplotlib 3.10.0 were used. Inspection scripts use the standard library. Preparation and baselines do not require a GPU. LSTM training used PyTorch `2.14.1+cu130` and the RTX 4050 Laptop GPU.
 
-```powershell
+The current project environment is `VirtEnv`. In Git Bash, activate it before the documented `python` commands:
+
+```bash
+source VirtEnv/Scripts/activate
 python -m pip install -r requirements.txt
 ```
+
+For a new checkout, create the environment first with `python -m venv VirtEnv`. To install the tested Windows GPU dependencies, run:
+
+```bash
+python -m pip install -r requirements-cuda.txt
+python -m pip check
+python -c "import numpy, torch; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+For the general training installation, use `python -m pip install -r requirements-training.txt` and run training with `--device cpu`. Choose one training installation. The current `VirtEnv` already contains the tested GPU dependencies. `VirtEnv` is excluded from Git.
+
+Preparation/baselines use NumPy and Matplotlib; neural training adds PyTorch. The dashboard adds Streamlit 1.66.0, pandas 3.0.6 and Plotly 7.1.0 through `requirements-dashboard.txt`. Supporting packages install automatically. TensorFlow, torchvision, torchaudio and scikit-learn are not required. Viewing saved results does not require PyTorch or a GPU.
 
 ## Prepare the local dataset
 
 Obtain `institutions.tar.gz` and `times.tar.gz` from the [CESNET-TimeSeries24 dataset record, version v1](https://zenodo.org/records/13382427). Keep the original archives in `data/raw/cesnet/`.
+
+For a fresh checkout, the standard-library download helper obtains and verifies both archives and extracts the two sample CSVs:
+
+```bash
+python -m data_processing.download_data
+```
+
+The helper restarts incomplete `.part` downloads from the beginning. Existing complete archives are checked and reused. If the two sample CSVs are already available, preparation and training can run without downloading the full archives. Repeating the institution-wide comparison requires the complete `institutions.tar.gz` archive; a `.part` file cannot serve as that input.
 
 Published MD5 checksums, also matched against the local downloads:
 
@@ -78,11 +115,11 @@ Institution 0 is the selected primary experimental series. Its selection followe
 
 From the repository root:
 
-```powershell
-python audit_sample.py
-python mark_segments.py
-python inspect_outage.py
-python mark_exclusions.py
+```bash
+python -m data_processing.audit_sample
+python -m data_processing.mark_segments
+python -m data_processing.inspect_outage
+python -m data_processing.mark_exclusions
 ```
 
 These commands regenerate:
@@ -98,8 +135,8 @@ Regular timestamps and populated cells do not establish complete traffic capture
 
 ## Compare institution candidates
 
-```powershell
-python compare_institutions.py
+```bash
+python -m data_processing.compare_institutions
 ```
 
 This reads the institution archive without extracting all its files and saves `data/inspection/institution_comparison.csv` and `.txt`. Coverage is the fraction of supplied time IDs present, not proof of complete capture. The comparison inspects `n_bytes` and timestamps, preserves observed zeros, and does not fill absent rows.
@@ -118,8 +155,8 @@ Window construction checks that the complete span from the earliest input observ
 
 After generating the review CSV:
 
-```powershell
-python build_features.py
+```bash
+python -m data_processing.build_features
 ```
 
 This saves `data/prepared/institution_0_features.csv`, preserving all original review cells. The nominal traffic rate is `n_bytes * 8 / (600 * 1_000_000)`. It includes both directions and is not physical-link utilization. Calendar features encode hour and weekday with sine and cosine using the supplied clock and UTC offset.
@@ -134,9 +171,9 @@ This table remains unscaled. Rolling statistics and scaling are applied by the c
 
 With the raw files in place, run:
 
-```powershell
-python prepare_dataset.py
-python -m unittest -v test_preparation
+```bash
+python -m data_processing.prepare_dataset
+python -m unittest -v tests.test_preparation
 ```
 
 The preparation command regenerates block labels, exclusions, and base features, then saves all remaining artifacts in `data/prepared/`:
@@ -160,69 +197,157 @@ The complete ordered timeline is split by observation count at 70% and 85%, befo
 
 The usable counts are not exactly 70/15/15 because exclusions and required histories are applied after fixing the cut points. The outage removes part of validation and the beginning of test; exact timestamps are saved in the CSVs. Both the automated path checks and the three behavioral tests passed locally. Raw input hashes remained unchanged.
 
-## Day 3: initial baselines
+## Day 3: baselines and the first LSTM
 
-```powershell
-python -m unittest -v test_baselines
-python evaluate_baselines.py --horizon 10
+With the training dependencies installed, the environment active, and raw samples prepared:
+
+```bash
+python -m data_processing.prepare_dataset
+python -m unittest -v tests.test_preparation tests.test_baselines tests.test_lstm
+python -m experiments.evaluate_baselines --horizon 10
+python -m experiments.train_lstm --horizon 10 --device cuda
 ```
 
-Persistence repeats the latest historical nominal rate. The moving average uses the latest four input observations, covering 40 nominal minutes. These fixed definitions require no fitting; training time is recorded as zero. They use the same saved windows as future neural models, with no future target values used in their predictions.
+Use `--device cpu` for CPU execution, or `--device auto` to let PyTorch select an available device. Preparation regenerates inputs from the raw samples; all three predictors share the same windows and exclusions. The baseline definitions are fixed: latest observation, and mean of the latest four observations (40 nominal minutes).
 
-Outputs are saved in `results/baselines/10min/`: timestamped `predictions.csv`, `metrics.csv`, `run_config.json`, and `test_prefix.png`. The plot shows the first 144 chronological test forecasts; scores use every eligible test window. Generated results remain excluded from Git.
+The LSTM has two unidirectional layers of 64 hidden units and a linear forecast head: 52,289 parameters. Each window starts with a fresh hidden state. Settings: seed 42, dropout zero, Adam at learning rate 0.001, batch size 64, scaled-target MSE, at most 30 epochs, and early-stopping patience five. Training windows shuffle with a seeded generator. The best validation MSE selects the checkpoint; test evaluation follows checkpoint restoration.
 
-| Baseline | Test MAE (Mbps) | Test RMSE (Mbps) | Test MAPE (%) | Test R² |
+The first GPU run stopped at epoch 20 and selected epoch 15. Training took 90.35 seconds, including validation and checkpoint saves. No settings were changed in response to test scores.
+
+| Predictor | Test MAE (nominal Mbps) | Test RMSE (nominal Mbps) | Test MAPE (%) | Test R² |
 | --- | ---: | ---: | ---: | ---: |
 | Persistence | 24.287 | 38.629 | 22.933 | 0.570 |
 | Moving average (4 observations) | 21.025 | 32.478 | 20.608 | 0.696 |
+| LSTM | 21.148 | 31.175 | 21.191 | 0.720 |
 
-Each baseline has 4,029 validation and 5,554 test predictions. MAPE uses positive targets and reports exclusions; none were excluded in this run. Undefined MAPE or R² is saved as a blank cell. CPU inference time averages 1,000 single-window predictions after 25 warm-up calls on preloaded histories, including loop/call overhead but excluding file loading and preprocessing. Timing varies with hardware and system load.
+The LSTM improves MAE and RMSE over persistence. Compared with the moving average, it has lower RMSE but slightly higher MAE and MAPE. This single-seed result does not establish that LSTM is consistently superior.
 
-The command also accepts `--horizon 30` or `--horizon 60` for the later comparison stage; those runs have not been performed yet. The baseline window was fixed before evaluating test results. Future model settings must use validation data, not test scores.
+Each predictor has 4,029 validation and 5,554 test predictions. MAPE uses positive targets and reports exclusions; there were none. Undefined MAPE or R² is saved as a blank cell. Predictions are not clipped for accuracy evaluation. CPU inference timing uses 25 warm-up and 1,000 timed single-window calls on preloaded data, including call/loop overhead and excluding loading and preprocessing; LSTM also includes inverse output scaling and uses one CPU thread. Timing varies with machine and system load.
 
-## First LSTM: implemented, training pending
+Generated baseline artifacts are in `results/baselines/10min/`. LSTM artifacts are in `results/lstm/10min/`: `best_model.pt`, `training_history.csv`, timestamped `predictions.csv`, `metrics.csv`, scaler/run/preparation JSON files, `comparison.csv`, `test_prefix.png`, and `learning_curve.png`. Result folders remain excluded from Git. The plot uses the first 144 chronological test forecasts; scores cover the full eligible splits.
 
-The model has two unidirectional LSTM layers with 64 hidden units and a linear forecast head: 52,289 parameters for the eight prepared input features. Each window starts with a fresh hidden state. Dropout is zero. It uses the existing 18-observation histories and shared metrics.
-
-The first-run settings are fixed: seed 42, Adam with learning rate 0.001, batch size 64, scaled-target MSE, maximum 30 epochs, and early-stopping patience five. The lowest validation loss selects the checkpoint; test metrics are computed only after restoring it. Training windows shuffle using a seeded generator, while validation and test remain chronological. Predictions are not clipped for accuracy evaluation.
-
-### Training environment
-
-Use the project `.venv` interpreter. For a fresh environment:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-training.txt
-```
-
-For this Python 3.12 Windows setup, the CUDA-enabled PyTorch 2.14.1 wheel is available from the official download host:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install --upgrade "https://download.pytorch.org/whl/cu130/torch-2.14.1%2Bcu130-cp312-cp312-win_amd64.whl"
-.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
-```
-
-GPU readiness means the second command reports `True`. The user is handling CUDA setup; the environment currently tested for the model was PyTorch `2.14.1+cpu`. Our package download was stopped before replacement. Base dependency versions are specified in `requirements.txt`; install them with the same interpreter when preparing the final training environment.
-
-### Check and run
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest -v test_lstm test_preparation test_baselines
-.\.venv\Scripts\python.exe train_lstm.py --horizon 10 --device cuda
-```
-
-CPU execution is supported with `--device cpu`; the default `--device auto` chooses CUDA when PyTorch reports it available. No full training run has been performed yet. All ten CPU unit checks passed, and a temporary optimizer/inference smoke check on 64 real training windows passed. Its weights were discarded and are not experiment results.
-
-A successful training run will save `results/lstm/10min/`: `best_model.pt`, `training_history.csv`, timestamped `predictions.csv`, `metrics.csv`, run/scaler/preparation configuration JSON files, `comparison.csv`, `test_prefix.png`, and `learning_curve.png`. Baseline comparisons require matching prepared-artifact hashes. CPU timing uses the existing 25-warm-up/1,000-call protocol on preloaded tensors with one CPU thread and includes inverse output scaling. Training time includes epoch passes, validation, and improved-checkpoint saves, excluding file loading and final evaluation.
-
-The script enables deterministic algorithms and seeds Python, NumPy, and PyTorch. One seed does not quantify model uncertainty or guarantee identical results across platforms or PyTorch versions; see [PyTorch's reproducibility guidance](https://docs.pytorch.org/docs/2.14/notes/randomness.html).
+All ten unit checks passed. The saved checkpoint reproduced all validation and test predictions, saved metrics agreed with recomputation, and source/preparation hashes were verified. Only one fixed seed was used; identical results across platforms or PyTorch versions are not guaranteed.
 
 ## Next milestone
 
-Day 3 remains open. Verify CUDA readiness and run the first 10-minute LSTM experiment, then implement the initial forecast-to-capacity calculation. No GRU, Transformer, allocation simulation, or dashboard has been implemented yet.
+Day 4's models and dashboard are complete. Next is Day 5: run all five predictors at 30 and 60 minutes. The full Day 6 allocation review remains ahead.
+
+## Day 3: initial allocation replay
+
+With the saved 10-minute baseline and LSTM forecasts available:
+
+```bash
+python -m unittest -v tests.test_preparation tests.test_baselines tests.test_lstm tests.test_allocation
+python -m experiments.evaluate_allocation
+```
+
+This command reads saved artifacts without retraining. It checks prepared-file hashes, forecast target IDs, split assignments, timestamps, and actual targets before replay. Reactive capacity uses the last available input demand; proactive capacity uses either the four-observation moving average or LSTM forecast. All use `max(0, forecast) * (1 + margin)` at margins of 5%, 10%, 15%, and 20%.
+
+Each policy's default margin is selected using validation data only: the lowest mean capacity meeting at most 1% shortfall intervals. **None qualifies in this experiment**, so every policy uses the specified 20% fallback. Validation shortfall at that margin is 19.68% reactive, 16.31% moving average, and 13.45% LSTM. The target remains unmet; the fallback is not a claim of adequate service.
+
+| Policy at 20% margin | Test shortfall intervals (%) | Mean capacity (Mbps) | Deficit volume (MB) | Mean excess capacity (Mbps) | Served demand / capacity |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Reactive | 23.44 | 140.21 | 2,127,196 | 28.48 | 0.797 |
+| Moving average | 18.85 | 140.19 | 1,685,299 | 27.39 | 0.805 |
+| LSTM | 10.86 | 148.67 | 1,102,083 | 34.47 | 0.768 |
+
+The LSTM policy reduces shortfalls but allocates more average capacity and has more unused capacity than the reactive policy. This tradeoff should be reported alongside forecasting accuracy.
+
+Deficit volume sums `max(actual-capacity, 0) * 600 / 8` in decimal MB, using CESNET's 10-minute intervals. Excess capacity is `max(capacity-actual, 0)`; served demand is `min(actual, capacity)`. The reported ratio divides total served demand by total allocated capacity, and is undefined if capacity sums to zero. Evaluation covers 4,029 eligible validation and 5,554 eligible test intervals; excluded gaps are not integrated.
+
+Outputs in `results/allocation/10min/` are `metrics.csv` (24 policy/split/margin rows), `replay.csv` (114,996 timestamped rows), `default_test_metrics.csv`, and `run_config.json` with validation selection evidence and source hashes. These are generated locally and excluded from Git. Six new behavioral checks passed, including flat traffic, a sudden spike, zero capacity, and inconsistent forecast records.
+
+This is an abstract offline capacity pool based on nominal recorded traffic. A deficit represents simulated unserved demand, not measured packet loss. Physical routing, link constraints, latency, controller delays, and live deployment are outside this experiment.
 
 ## Dataset references
 
 - [Dataset download and provenance](https://zenodo.org/records/13382427)
 - [Dataset methodology](https://arxiv.org/html/2409.18874v1)
 - [Published dataset article](https://doi.org/10.1038/s41597-025-04603-x)
+
+## Source directories and Day 4 commands
+
+Run commands from the repository root with `VirtEnv` active. Python files are grouped by role:
+
+| Directory | Contents |
+| --- | --- |
+| `data_processing/` | Acquisition, inspection, exclusions, features and window preparation. |
+| `models/` | LSTM, GRU and Transformer neural-network definitions. |
+| `experiments/` | Forecast metrics, baseline evaluation, training and allocation replay. |
+| `tests/` | Preparation, forecast, model and allocation checks. |
+| `dashboard/` | Saved-result loaders, interactive charts, app and styles. |
+
+```bash
+python -m unittest discover -s tests -v
+python -m experiments.train_gru --horizon 10 --device cuda
+python -m experiments.train_transformer --horizon 10 --device cuda
+```
+
+The GRU uses the LSTM procedure: two layers, 64 hidden units, dropout zero, seed 42, Adam at 0.001, batch size 64, at most 30 epochs and validation early stopping with patience five. Its parameter count is 39,233. The shared trainer in `experiments/train_neural.py` saves GRU artifacts in `results/gru/10min/`, with comparisons to matching saved baselines and LSTM. Each training command trains only its named model. Source directory changes preserve the root-level `data/` and `results/` locations. No new dependencies are needed.
+
+The Transformer has two independently initialized encoder layers, model dimension 64, four attention heads, feed-forward width 128, GELU activation, post-norm LayerNorm, and dropout zero. A linear projection maps the eight input features to dimension 64; fixed sinusoidal positional encoding represents historical order. The output head reads the final historical position. Total parameters: 67,585. All 18 positions contain available history, so attention can use the full input window without a target token. The experiment uses mathematical scaled dot-product attention and disables the MHA evaluation fastpath. Training and evaluation settings otherwise match the other neural models. These architecture choices were recorded before training.
+
+Implementation references: [PyTorch encoder-layer API](https://docs.pytorch.org/docs/2.14/generated/torch.nn.TransformerEncoderLayer.html) and [attention-backend API](https://docs.pytorch.org/docs/2.14/generated/torch.nn.attention.sdpa_kernel.html).
+
+Transformer artifacts are saved in `results/transformer/10min/`; its comparison CSV and plot include matching saved persistence, moving-average, LSTM and GRU results when available. The CPU inference protocol is unchanged; timings are machine-dependent and include each model's chosen attention implementation.
+
+## Day 4: first GRU result
+
+The 10-minute GRU completed 18 epochs and selected epoch 13 using validation. Training took 72.26 seconds. Test MAE is 20.910 Mbps, RMSE 31.006 Mbps, MAPE 20.921% and R² 0.723. Evidence is in `results/gru/10min/metrics.csv`, `comparison.csv`, `predictions.csv`, `best_model.pt` and `run_config.json`.
+
+All 19 tests passed after the directory reorganization. The checkpoint reproduced all 9,583 validation/test forecasts within floating-point tolerance; metrics agreed with recomputation, and existing preparation/LSTM/baseline/allocation file hashes were unchanged. A single seed is still the limitation.
+
+## Day 4: first Transformer result and five-predictor comparison
+
+The Transformer stopped after epoch 13 and restored epoch 8, selected by lowest validation MSE. Training took 145.14 seconds; test CPU inference measured 2.068 milliseconds per forecast under the shared timing protocol.
+
+All predictors use the same 5,554 test targets:
+
+| Predictor | Test MAE (Mbps) | Test RMSE (Mbps) | Test MAPE (%) | Test R² |
+| --- | ---: | ---: | ---: | ---: |
+| Persistence | 24.287 | 38.629 | 22.933 | 0.570 |
+| Moving average | 21.025 | 32.478 | 20.608 | 0.696 |
+| LSTM | 21.148 | 31.175 | 21.191 | 0.720 |
+| GRU | 20.910 | 31.006 | 20.921 | 0.723 |
+| Transformer | 20.746 | 30.803 | 21.864 | 0.726 |
+
+The Transformer has the lowest test MAE and RMSE in this run, while its MAPE is higher than the moving average, LSTM and GRU. Moving average retains the lowest MAPE. Validation RMSE is 34.842 Mbps for Transformer, 34.606 for LSTM and 34.557 for GRU, so test rankings should not be used retrospectively to select checkpoints or change settings. One seed and one institution do not establish consistent superiority.
+
+Evidence: `results/transformer/10min/comparison.csv` contains all ten model/split metric rows; the same folder holds the model's metrics, forecasts, checkpoint, configuration, learning curve and first-144-test-interval comparison plot. All test targets were positive, so MAPE omitted none. No negative predictions were produced. All forecasts are evaluated without clipping.
+
+All 24 tests passed before training. The saved checkpoint reproduced all 9,583 validation/test forecasts within `rtol=1e-5, atol=1e-4` Mbps. Recomputed metrics matched CSVs, all five predictors matched the same timestamped targets, and all 43 previous preparation/result file hashes remained unchanged. Raw sample hashes also matched the preparation manifest. Both new figures were visually checked.
+
+The 30/60-minute comparisons and the expanded allocation review follow later; allocation currently still uses reactive, moving-average and LSTM policies.
+
+## Day 4: run the local dashboard
+
+From the repository root in Git Bash:
+
+```bash
+source VirtEnv/Scripts/activate
+python -m pip install -r requirements-dashboard.txt
+python -m streamlit run dashboard/app.py
+```
+
+Open **http://127.0.0.1:8501**. Stop the server with `Ctrl+C` in its terminal. The app binds to the local machine and uses saved files; it does not train models, load checkpoints, require CUDA, or contact the dataset service. A fresh clone must first obtain/regenerate result artifacts because `results/` is Git-ignored.
+
+Overview follows the reviewed mockup: model metrics, actual-versus-predicted traffic, a model comparison table and allocation summary. Sidebar views provide a larger forecasting or allocation area. Select validation/test, a model, an available horizon, chart history and replay position. A replay interval changes the displayed chart and interval readout; the main scores remain the full eligible split. Dates are real UTC targets. Lines break across excluded intervals rather than joining through gaps.
+
+Only 10-minute results are currently available. Future 30/60-minute results are discovered from complete saved runs. Allocation has its own clearly labeled model control for LSTM or moving average, because GRU/Transformer allocation has not yet been evaluated. Both policies use the selected 5/10/15/20% margin. Validation-selected defaults and the unmet 1% target remain visible; sliders do not rewrite those defaults or result files. Comparison, forecasts and allocation replay can be downloaded as CSVs.
+
+The loader verifies common prepared-data signatures, model/target identities, UTC leads, observed demand and saved forecasting metrics. Allocation checks its forecast-source hashes, all saved margin/split scores and validation defaults. Replaced result files invalidate the in-memory cache. Corrupt/incomplete runs produce an explanatory message. An empty checkout shows regeneration commands.
+
+Dashboard-only checks:
+
+```bash
+python -m unittest -v tests.test_dashboard
+```
+
+All checks (requires training and dashboard dependencies):
+
+```bash
+python -m unittest discover -s tests -v
+python -m pip check
+```
+
+All **31 tests** pass, including seven dashboard checks. These cover UI model/split/page/margin changes, independent result fixtures, corrupt metrics, misaligned targets, stale allocation sources, excluded chart gaps and the empty-results state. Local browser QA images are saved under `results/dashboard/` and excluded from Git.

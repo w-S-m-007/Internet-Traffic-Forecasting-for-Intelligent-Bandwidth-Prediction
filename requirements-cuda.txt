@@ -1,0 +1,4 @@
+# Tested on Windows, Python 3.12, and the RTX 4050 Laptop GPU.
+--extra-index-url https://download.pytorch.org/whl/cu130
+-r requirements.txt
+torch==2.14.1+cu130

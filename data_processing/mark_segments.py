@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     sample = project / "data/raw/cesnet/sample"
     with (sample / "times_10_minutes.csv").open(newline="", encoding="utf-8-sig") as handle:
         time_rows = list(csv.DictReader(handle))

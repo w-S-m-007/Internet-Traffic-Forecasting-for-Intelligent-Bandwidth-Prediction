@@ -11,7 +11,7 @@ from time import perf_counter
 
 import numpy as np
 
-from forecast_metrics import forecast_metrics
+from experiments.forecast_metrics import forecast_metrics
 
 
 def persistence(history):
@@ -40,12 +40,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--horizon", type=int, choices=[10, 30, 60], default=10)
     args = parser.parse_args()
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     prepared = project / "data/prepared"
     array_path = prepared / f"windows_{args.horizon}min.npz"
     metadata_path = prepared / f"windows_{args.horizon}min.csv"
     if not array_path.exists() or not metadata_path.exists():
-        raise FileNotFoundError("Run python prepare_dataset.py first")
+        raise FileNotFoundError("Run python -m data_processing.prepare_dataset first")
     with np.load(array_path, allow_pickle=False) as artifact:
         histories = artifact["input_mbps"].copy()
         actual = artifact["target_mbps"].copy()
@@ -128,7 +128,7 @@ def plot_prefix(output, metadata, actual, predictions, splits, horizon):
     axis.plot(dates, actual[indices], color="#111827", linewidth=1.5, label="Actual")
     for model, values in predictions.items():
         axis.plot(dates, values[indices], linewidth=1, alpha=.85, label=model)
-    axis.set(title=f"{horizon}-minute baselines: first {len(indices)} test forecasts",
+    axis.set(title=f"{horizon}-minute forecast comparison: first {len(indices)} test intervals",
              ylabel="Nominal recorded Mbps",
              xlabel=f"Target interval completion (UTC), starting {dates[0].date()}")
     axis.xaxis.set_major_formatter(mdates.DateFormatter("%d %H:%M", tz=timezone.utc))

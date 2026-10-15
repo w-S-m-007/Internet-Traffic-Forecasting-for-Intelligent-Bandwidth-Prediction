@@ -8,7 +8,7 @@ from statistics import mean, median
 
 
 def main():
-    project = Path(__file__).resolve().parent
+    project = Path(__file__).resolve().parents[1]
     sample = project / "data/raw/cesnet/sample"
     with (sample / "times_10_minutes.csv").open(newline="", encoding="utf-8-sig") as handle:
         time_rows = list(csv.DictReader(handle))
@@ -85,7 +85,7 @@ def main():
         "Seasonality, holidays, and genuine demand changes have not been controlled for.",
         "Complete timestamps do not prove complete traffic capture.",
         "No rows or values were changed; no filling, exclusion policy, or model was applied.",
-        "Reproduce: python inspect_outage.py",
+        "Reproduce: python -m data_processing.inspect_outage",
     ])
     output = project / "data/inspection/institution_0_outage_check.txt"
     output.parent.mkdir(parents=True, exist_ok=True)

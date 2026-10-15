@@ -24,13 +24,13 @@ The sample has 40,298 rows and 19 columns. No duplicate `id_time` values were fo
 
 ## Raw sample audit
 
-Run `python audit_sample.py` to regenerate `data/inspection/institution_0_audit.txt`. All 18 measurement columns have no blank, nonnumeric, nonfinite, negative, or zero values in this sample. This does not prove complete traffic capture.
+Run `python -m data_processing.audit_sample` to regenerate `data/inspection/institution_0_audit.txt`. All 18 measurement columns have no blank, nonnumeric, nonfinite, negative, or zero values in this sample. This does not prove complete traffic capture.
 
 There are **five timestamp transitions that are not exactly 600 seconds apart**, despite complete time IDs. The mapping carries +01:00 and +02:00 offsets; elapsed time was checked in UTC. Exact discontinuities and unresolved questions are recorded in `research_notes.txt`. No data has been cleaned or resampled. We must resolve timestamp handling before generating forecast windows.
 
 ## Separate inspection copy with block labels
 
-Run `python mark_segments.py` to regenerate `data/inspection/institution_0_segments.csv`. It retains all 40,298 rows and original cell values, with five added inspection columns:
+Run `python -m data_processing.mark_segments` to regenerate `data/inspection/institution_0_segments.csv`. It retains all 40,298 rows and original cell values, with five added inspection columns:
 
 - `timestamp_supplied`: exact timestamp text from the mapping.
 - `timestamp_utc`: the same instant expressed in UTC.
@@ -42,7 +42,7 @@ The six blocks contain 2,880, 767, 10,967, 25,449, 38, and 197 rows. All origina
 
 ## Exploratory monitoring-outage comparison
 
-Run `python inspect_outage.py` to regenerate `data/inspection/institution_0_outage_check.txt`. It compares full calendar days before (May 7–20), during (May 22–June 3), and after (June 5–18) the reported outage in 2024. Dates follow the supplied timestamp mapping; the paper does not specify the outage's timezone. May 21 and June 4 are omitted from these period averages because they are partial boundary days, not removed from the source data.
+Run `python -m data_processing.inspect_outage` to regenerate `data/inspection/institution_0_outage_check.txt`. It compares full calendar days before (May 7–20), during (May 22–June 3), and after (June 5–18) the reported outage in 2024. Dates follow the supplied timestamp mapping; the paper does not specify the outage's timezone. May 21 and June 4 are omitted from these period averages because they are partial boundary days, not removed from the source data.
 
 All 43 inspected days have 144 records and all adjacent timestamps are 600 seconds apart in UTC. Mean recorded bytes per row are 53.65% lower during the comparison period than before, and 34.86% lower than after. This is consistent with partial capture but does not establish this institution's exact outage effects. Weekday mix, holidays, and demand changes have not been controlled for. The comparison itself does not correct or exclude any observations.
 
@@ -50,13 +50,13 @@ All 43 inspected days have 144 records and all adjacent timestamps are 600 secon
 
 The chosen treatment is to exclude the suspect dates from future modeling and evaluation, while retaining the raw data. Mark May 20–June 5, 2024, inclusive, in the supplied mapping's calendar dates: the reported outage days plus one full day on either side.
 
-Run `python mark_segments.py` followed by `python mark_exclusions.py`. The resulting `data/inspection/institution_0_review.csv` retains every row and adds `excluded_for_outage` and `exclusion_reason`. It marks 2,448 observations across 17 days; 37,850 observations are outside this exclusion. Original cells and input hashes were verified unchanged.
+Run `python -m data_processing.mark_segments` followed by `python -m data_processing.mark_exclusions`. The resulting `data/inspection/institution_0_review.csv` retains every row and adds `excluded_for_outage` and `exclusion_reason`. It marks 2,448 observations across 17 days; 37,850 observations are outside this exclusion. Original cells and input hashes were verified unchanged.
 
 The buffer is a conservative project decision, not an author-provided incident label or an estimate of the true failure duration. Implemented window checks require no marked row anywhere from the earliest input through the target and require one timestamp segment. Observations are not stitched across exclusions. Unmarked observations are not certified free of capture problems.
 
 ## Institution comparison before selection
 
-Run `python compare_institutions.py` to regenerate the comparison CSV and text report in `data/inspection/`. All 283 institution-level 10-minute files were read directly from the archive. Of these, 56 have all 40,298 supplied time IDs present and 229 have at least 95% mapped-row coverage. Median coverage is 99.9231%. This describes record availability, not complete traffic capture.
+Run `python -m data_processing.compare_institutions` to regenerate the comparison CSV and text report in `data/inspection/`. All 283 institution-level 10-minute files were read directly from the archive. Of these, 56 have all 40,298 supplied time IDs present and 229 have at least 95% mapped-row coverage. Median coverage is 99.9231%. This describes record availability, not complete traffic capture.
 
 Across these institution files, the comparison found no duplicate or unmapped IDs, non-increasing timestamps, or blank, invalid, negative, or zero `n_bytes` values. Other measurement columns were not audited across all institutions. Absent rows were not interpreted as zeros.
 
@@ -84,7 +84,7 @@ This definition is used for the offline experiment. It does not repair undercapt
 
 ## Unscaled feature table
 
-Run `python build_features.py` after generating the review CSV. Output: `data/prepared/institution_0_features.csv`. All 40,298 rows and existing cells are retained. Added columns hold nominal recorded Mbps, a separately filled input rate, observation/missing flags, boundary guards, eligibility flags, and hour/weekday sine-cosine features.
+Run `python -m data_processing.build_features` after generating the review CSV. Output: `data/prepared/institution_0_features.csv`. All 40,298 rows and existing cells are retained. Added columns hold nominal recorded Mbps, a separately filled input rate, observation/missing flags, boundary guards, eligibility flags, and hour/weekday sine-cosine features.
 
 Both the first and last observation in each of the six uninterrupted blocks are guarded: 12 observations. These guards and the 2,448 outage observations do not overlap, leaving 37,838 eligible input and target observations. This guard is a project precaution, not a finding that those measurements are invalid.
 
@@ -94,7 +94,7 @@ The table is unscaled. The complete preparation command constructs rolling stati
 
 ## Day 2 checkpoint complete
 
-Run `python prepare_dataset.py`, then `python -m unittest -v test_preparation`. Use 18 observations per input and separate direct 10-, 30-, and 60-minute targets. Rolling mean and population standard deviation use the latest up to six values inside each input window. No hidden history or future values contribute.
+Run `python -m data_processing.prepare_dataset`, then `python -m unittest -v tests.test_preparation`. Use 18 observations per input and separate direct 10-, 30-, and 60-minute targets. Rolling mean and population standard deviation use the latest up to six values inside each input window. No hidden history or future values contribute.
 
 Chronological cuts use 70%/85% of the full ordered observation timeline before exclusions. Target nominal completion timestamps assign windows to splits. Validation starts at `2024-04-21T22:40:52+00:00`; test starts at `2024-06-02T22:10:52+00:00`. The outage removes early test windows: the first usable target completion is June 6 at 01:10:52 UTC for the 10-minute horizon. Remaining counts and timestamps are saved in `data/prepared/`.
 
