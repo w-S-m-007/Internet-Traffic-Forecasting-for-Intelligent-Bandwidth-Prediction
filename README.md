@@ -4,7 +4,7 @@ An academic project investigating traffic forecasting with LSTM, GRU, and a smal
 
 ## Current progress
 
-**Days 2–4 are complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. All five predictors have 10-minute results, an initial allocation experiment is saved, and the local dashboard reads those artifacts without retraining.
+**Data preparation, the initial forecasting and allocation experiments, and the dashboard are complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. All five predictors have 10-minute results, an initial allocation experiment is saved, and the local dashboard reads those artifacts without retraining.
 
 Implemented:
 
@@ -167,7 +167,7 @@ If a byte observation is missing, the input value can carry forward a previously
 
 This table remains unscaled. Rolling statistics and scaling are applied by the complete preparation workflow below.
 
-## Complete Day 2 workflow
+## Prepare forecasting windows
 
 With the raw files in place, run:
 
@@ -197,7 +197,7 @@ The complete ordered timeline is split by observation count at 70% and 85%, befo
 
 The usable counts are not exactly 70/15/15 because exclusions and required histories are applied after fixing the cut points. The outage removes part of validation and the beginning of test; exact timestamps are saved in the CSVs. Both the automated path checks and the three behavioral tests passed locally. Raw input hashes remained unchanged.
 
-## Day 3: baselines and the first LSTM
+## Baselines and the first LSTM experiment
 
 With the training dependencies installed, the environment active, and raw samples prepared:
 
@@ -230,9 +230,9 @@ All ten unit checks passed. The saved checkpoint reproduced all validation and t
 
 ## Next milestone
 
-Day 4's models and dashboard are complete. Next is Day 5: run all five predictors at 30 and 60 minutes. The full Day 6 allocation review remains ahead.
+The 10-minute model comparison and dashboard are complete. Next, run all five predictors at 30 and 60 minutes, followed by the full allocation review.
 
-## Day 3: initial allocation replay
+## Initial bandwidth allocation experiment
 
 With the saved 10-minute baseline and LSTM forecasts available:
 
@@ -265,7 +265,7 @@ This is an abstract offline capacity pool based on nominal recorded traffic. A d
 - [Dataset methodology](https://arxiv.org/html/2409.18874v1)
 - [Published dataset article](https://doi.org/10.1038/s41597-025-04603-x)
 
-## Source directories and Day 4 commands
+## Source directories and model training commands
 
 Run commands from the repository root with `VirtEnv` active. Python files are grouped by role:
 
@@ -291,13 +291,13 @@ Implementation references: [PyTorch encoder-layer API](https://docs.pytorch.org/
 
 Transformer artifacts are saved in `results/transformer/10min/`; its comparison CSV and plot include matching saved persistence, moving-average, LSTM and GRU results when available. The CPU inference protocol is unchanged; timings are machine-dependent and include each model's chosen attention implementation.
 
-## Day 4: first GRU result
+## First GRU experiment
 
 The 10-minute GRU completed 18 epochs and selected epoch 13 using validation. Training took 72.26 seconds. Test MAE is 20.910 Mbps, RMSE 31.006 Mbps, MAPE 20.921% and R² 0.723. Evidence is in `results/gru/10min/metrics.csv`, `comparison.csv`, `predictions.csv`, `best_model.pt` and `run_config.json`.
 
 All 19 tests passed after the directory reorganization. The checkpoint reproduced all 9,583 validation/test forecasts within floating-point tolerance; metrics agreed with recomputation, and existing preparation/LSTM/baseline/allocation file hashes were unchanged. A single seed is still the limitation.
 
-## Day 4: first Transformer result and five-predictor comparison
+## First Transformer experiment and five-predictor comparison
 
 The Transformer stopped after epoch 13 and restored epoch 8, selected by lowest validation MSE. Training took 145.14 seconds; test CPU inference measured 2.068 milliseconds per forecast under the shared timing protocol.
 
@@ -319,7 +319,7 @@ All 24 tests passed before training. The saved checkpoint reproduced all 9,583 v
 
 The 30/60-minute comparisons and the expanded allocation review follow later; allocation currently still uses reactive, moving-average and LSTM policies.
 
-## Day 4: run the local dashboard
+## Run the local dashboard
 
 From the repository root in Git Bash:
 

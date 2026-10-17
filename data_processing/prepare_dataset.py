@@ -1,4 +1,4 @@
-"""Regenerate the Day 2 data artifacts. This command does not train models."""
+"""Regenerate the prepared data artifacts. This command does not train models."""
 
 import csv
 import hashlib

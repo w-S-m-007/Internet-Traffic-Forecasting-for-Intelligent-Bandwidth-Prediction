@@ -136,7 +136,7 @@ Documented the download helper, incomplete archive status, dependency scope,
 and generated-file order. Changed portable command-block labels to bash.
 Removed the README assumption that optional paper files exist in this clone.
 Preserved the installed packages, source-model behavior, raw data and results.
-Roadmap status unchanged: Day 2 complete; Day 3 allocation step still pending.
+Milestone status: data preparation complete; initial allocation still pending.
 
 FOLLOW-UP - INITIAL ALLOCATION STEP (2026-10-14)
 Two additional Python files bring the source/test total to 17.
@@ -149,16 +149,16 @@ hashes, IDs, timestamps, actual targets and historical baselines were checked.
 Outputs: results/allocation/10min/{metrics.csv,replay.csv,
 default_test_metrics.csv,run_config.json}. Model retraining is not required.
 The six allocation tests passed in addition to the ten existing tests.
-Updated roadmap status: Day 3 initial allocation checkpoint is complete.
+Updated milestone status: the initial allocation checkpoint is complete.
 
-DAY 4 UPDATE - 2026-10-15
+SOURCE ORGANIZATION AND GRU UPDATE - 2026-10-15
 Source layout: data_processing/, models/, experiments/, tests/.
 Old root-file commands above are historical; current commands use python -m.
 Added models/gru_model.py (PyTorch), experiments/train_gru.py
 (shared trainer), tests/test_gru.py (existing model behavior checks for GRU).
 No new package dependencies. All 19 tests pass after import/path updates.
 
-DAY 4 TRANSFORMER UPDATE - 2026-10-15
+TRANSFORMER DEPENDENCY UPDATE - 2026-10-15
 Added models/transformer_model.py and tests/test_transformer.py (PyTorch),
 experiments/train_transformer.py (entry point), experiments/train_neural.py
 (shared training logic). train_lstm.py remains a compatible entry point;
@@ -168,7 +168,7 @@ the existing neural workflow. Transformer comparison additionally reads saved
 LSTM and GRU forecasts/metrics when those artifacts are present.
 24 unit tests passed; checkpoint/metrics/source-hash verification passed.
 
-DAY 4 DASHBOARD DEPENDENCY UPDATE - 2026-10-15
+DASHBOARD DEPENDENCY UPDATE - 2026-10-15
 Current direct third-party imports across the full project: NumPy,
 Matplotlib, PyTorch, Streamlit, pandas and Plotly. The last three are new
 UI dependencies, pinned in requirements-dashboard.txt to 1.66.0, 3.0.6, 7.1.0.

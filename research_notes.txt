@@ -3,7 +3,7 @@ Date: 2026-10-12
 
 STATUS
 The archives are checksum verified and all 283 institution series compared.
-Institution 0 is selected. Day 2 preprocessing, features, splits, windows,
+Institution 0 is selected. Preprocessing, features, splits, windows,
 training-only scalers, plots, and preparation checks are complete.
 The 10-minute baselines and first LSTM have been trained/evaluated as applicable.
 Initial allocation performance evaluation has not yet occurred.
@@ -312,9 +312,9 @@ sequence. Apply this policy equally to all models and baselines, to training,
 validation, test forecasts, and the downstream allocation evaluation.
 Keep split assignment chronological by target timestamp when implemented.
 
-ROADMAP POSITION
+MILESTONE STATUS
 Work completed so far covers dataset acquisition/provenance and the early
-data-quality work associated with Days 1-2 of the original roadmap. Day 2's
+data-quality work in the dataset acquisition and preparation milestones. The
 features, splits, forecasting windows, and pipeline checkpoint are unfinished.
 The CESNET restart requires a revised measurement target and horizons;
 the original GÉANT-specific defaults remain unapproved for CESNET.
@@ -369,7 +369,7 @@ headers and IDs, with the same 40,298 rows, six segments, and 2,448 outage flags
 Raw files were not altered. Keep alignment formatting in a viewer rather
 than saving padding into CSV cells used as program input.
 
-ROADMAP: Still Day 2 data preparation. Target units are now documented;
+MILESTONE STATUS: Data preparation is in progress. Target units are now documented;
 no modeling table, feature generation, forecasting windows, or training yet.
 
 INSTITUTION COMPARISON BEFORE SELECTION - VERIFIED LOCALLY, 2026-10-12
@@ -421,7 +421,7 @@ RECOMMENDATION - NOT A COMPLETED SERIES SELECTION
 Retain institution 0 for the first experiment: tied prospective availability,
 lowest numeric ID among tied candidates, and existing all-column audit.
 This does not establish that institution 0 is the best forecasting series.
-Day 2 remains open: final series selection, features, splits, actual windows,
+Data preparation remains open: final series selection, features, splits, actual windows,
 training-only scalers, plots, and end-to-end preparation checks are unfinished.
 
 PRIMARY SERIES - SELECTED BY USER, 2026-10-12
@@ -462,11 +462,11 @@ exclusion, guarded edges, and resetting at a timestamp break. Changing a future
 byte value left all earlier feature rows unchanged.
 Outage-marked targets are ineligible; all 12 boundary guards are present.
 
-DAY 2 STATUS: Still open. Base features are ready; chronological splits,
+DATA PREPARATION STATUS: Still open. Base features are ready; chronological splits,
 actual input/target windows, rolling features, training-only scalers, plots,
 and the complete preparation checkpoint remain unfinished. No training started.
 
-DAY 2 COMPLETE - IMPLEMENTED AND VERIFIED, 2026-10-12
+DATA PREPARATION COMPLETE - IMPLEMENTED AND VERIFIED, 2026-10-12
 Regenerate: python prepare_dataset.py
 Behavioral tests: python -m unittest -v test_preparation
 Dependencies used: Python 3.12.10, NumPy 2.3.0, Matplotlib 3.10.0.
@@ -533,11 +533,11 @@ Three behavioral tests passed: intervening excluded rows reject a window,
 future values cannot change past rolling features, and holdout values cannot
 change training scalers. The generated plot was visually inspected.
 
-COMPLETION: Day 2's leakage-safe preparation checkpoint is achieved.
-Next is Day 3: baselines and the first LSTM experiment. No trained models,
+COMPLETION: The leakage-safe preparation checkpoint is achieved.
+Next: baselines and the first LSTM experiment. No trained models,
 forecast accuracy numbers, allocation results, or dashboard are present yet.
 
-DAY 3: INITIAL BASELINES - IMPLEMENTED AND EVALUATED, 2026-10-13
+INITIAL BASELINES - IMPLEMENTED AND EVALUATED, 2026-10-13
 Reproduce: python evaluate_baselines.py --horizon 10
 Checks: python -m unittest -v test_baselines
 Evidence: results/baselines/10min/metrics.csv, predictions.csv, run_config.json,
@@ -585,7 +585,7 @@ fixed prefix, not for favorable accuracy. Full-split scores are in metrics.csv.
 The baseline command validates saved metadata/array split agreement.
 No dataset values, prepared windows, or split assignments were changed.
 
-ROADMAP: Day 3 is in progress. Baselines at 10 minutes are ready; the first
+MILESTONE STATUS: Initial forecasting is in progress. Baselines at 10 minutes are ready; the first
 LSTM and the forecast-to-allocation checkpoint remain unfinished. Thirty- and
 sixty-minute baseline runs remain for the later multi-horizon comparison.
 
@@ -593,11 +593,11 @@ FINAL BASELINE ARTIFACT AUDIT - VERIFIED LOCALLY, 2026-10-13
 All 19,166 saved prediction rows (two models, validation plus test) were
 checked against the prepared unscaled targets and historical input values.
 Baseline formulas, split labels, and the 600-second origin-to-target-completion
-lead all agreed. Both raw source hashes still match the Day 2 manifest.
+lead all agreed. Both raw source hashes still match the preparation manifest.
 The prediction plot was visually inspected. Generated result files remain
 ignored by Git; only source code and documentation were changed.
 
-DAY 3: FIRST LSTM IMPLEMENTATION - 2026-10-13
+FIRST LSTM IMPLEMENTATION - 2026-10-13
 Code: lstm_model.py, train_lstm.py, test_lstm.py.
 Training dependencies: requirements-training.txt.
 Architecture: two unidirectional LSTM layers, hidden size 64, eight input
@@ -650,11 +650,11 @@ step and batched inference were finite, and helper loss evaluation worked.
 Temporary smoke-test weights were discarded; no model checkpoint or neural
 accuracy result from a completed experiment has been saved.
 
-ROADMAP: Day 3 remains in progress. LSTM implementation and CPU checks are
+MILESTONE STATUS: Initial forecasting remains in progress. LSTM implementation and CPU checks are
 ready; the first full training/evaluation run waits for the user's CUDA setup.
 Initial forecast-to-allocation calculations are also unfinished.
 
-DAY 3: FIRST FULL LSTM EXPERIMENT - VERIFIED LOCALLY, 2026-10-14
+FIRST FULL LSTM EXPERIMENT - VERIFIED LOCALLY, 2026-10-14
 Active checkout: D:/Projects/Internet-Traffic-Forecasting-for-Intelligent-Bandwidth-Prediction.
 Active environment: VirtEnv, Python 3.12.10, PyTorch 2.14.1+cu130,
 NumPy 2.3.0, Matplotlib 3.10.0. CUDA is available on the RTX 4050 Laptop GPU.
@@ -662,7 +662,7 @@ The missing NumPy warning was resolved by installing requirements.txt.
 The user's CUDA-enabled PyTorch build was retained. VirtEnv is now Git-ignored.
 
 MIGRATION AND REGENERATION
-The fresh checkout lacked the earlier uncommitted Day 3 scripts and prepared
+The fresh checkout lacked the earlier uncommitted forecasting scripts and prepared
 artifacts. Missing source files were restored from the prior local checkout.
 The two raw sample CSVs were copied after SHA256 verification against the
 previous preparation manifest. Existing files and the user's download helper
@@ -720,7 +720,7 @@ prepared artifact SHA256 hashes matched the recorded run configuration.
 Both figures were visually reviewed; comparison caption was corrected to
 cover the neural model and baselines without changing predictions or scores.
 
-ROADMAP: Day 3's first forecasting experiment is complete. The Day 3
+MILESTONE STATUS: The first forecasting experiment is complete. The initial
 forecast-to-allocation checkpoint remains open until the initial capacity
 calculation is implemented. No GRU, Transformer, additional-horizon training,
 or dashboard has been implemented yet.
@@ -740,7 +740,7 @@ CESNET archives are absent in this checkout; the retained 128 MiB partial
 institution archive cannot support the institution-wide comparison. This
 is not a blocker for the current institution 0 forecasting experiment.
 All source and generated-file dependencies are listed in dependency_audit.txt.
-Day 3's initial allocation step remains pending.
+The initial allocation step remains pending.
 
 INITIAL ALLOCATION REPLAY - 2026-10-14
 Added evaluate_allocation.py and six behavioral checks in test_allocation.py.
@@ -795,11 +795,11 @@ run_config.json: formulas, limitations, selection evidence and source hashes.
 All summaries were independently recomputed from the replay and agreed.
 Recorded source hashes were rechecked and unchanged.
 The combined preparation/baseline/LSTM/allocation suite passed all 16 tests.
-Day 3's initial forecast-to-allocation checkpoint is complete. Next is Day 4:
+The initial forecast-to-allocation checkpoint is complete. Next:
 GRU/Transformer comparisons, then the dashboard shell. Full allocation review
 and final model comparisons remain later milestones. No Git commit or push.
 
-DAY 4 DIRECTORY ORGANIZATION AND FIRST GRU - 2026-10-15
+DIRECTORY ORGANIZATION AND FIRST GRU EXPERIMENT - 2026-10-15
 Moved Python source into data_processing/, models/, experiments/, tests/.
 Run modules from the repository root; data/ and results/ retain their paths.
 Commands: python -m unittest discover -s tests -v;
@@ -843,9 +843,9 @@ All 19 tests passed. Saved checkpoint forecasts and recomputed metrics
 were verified. Existing data and previous result hashes stayed unchanged.
 Evidence: results/gru/10min/ metrics, comparison, predictions, checkpoint,
 configuration and figures. Only one fixed seed; do not claim universal superiority.
-Day 4 remains open: Transformer and dashboard shell are still pending.
+Model comparison and dashboard work remain open: Transformer and dashboard shell are still pending.
 
-DAY 4 TRANSFORMER SETTINGS RECORDED BEFORE TRAINING - 2026-10-15
+TRANSFORMER SETTINGS RECORDED BEFORE TRAINING - 2026-10-15
 Two independently initialized encoder layers; dimension 64; four attention
 heads; feed-forward width 128; GELU; dropout zero; post-norm LayerNorm with
 epsilon 1e-5. Linear 8-to-64 input projection and scalar output from the last
@@ -867,7 +867,7 @@ https://docs.pytorch.org/docs/2.14/generated/torch.nn.TransformerEncoderLayer.ht
 https://docs.pytorch.org/docs/2.14/generated/torch.nn.attention.sdpa_kernel.html
 All 24 tests passed before training, including five Transformer behavior checks.
 
-DAY 4 FIRST TRANSFORMER RESULT - 2026-10-15
+FIRST TRANSFORMER RESULT - 2026-10-15
 Training completed 13 epochs; validation chose epoch 8.
 Training time 145.14280130001134 seconds.
 {
@@ -916,8 +916,8 @@ scalers.json, preparation_config.json, test_prefix.png, learning_curve.png.
 These results use one fixed seed and one institution. Do not retune from
 test scores or claim universal superiority. Architecture parameter counts and
 attention implementation differ; timing is machine-dependent.
-ROADMAP: all three neural models and two baselines now have 10-minute
-results. Day 4 remains open for the dashboard shell. Day 5 still needs all
+MILESTONE STATUS: All three neural models and two baselines now have 10-minute
+results. The dashboard shell is still pending. The horizon comparison still needs all
 30/60-minute predictor comparisons. Existing allocation remains reactive,
 moving-average and LSTM only; GRU/Transformer allocation review comes later.
 
@@ -944,9 +944,9 @@ plot shows sudden spikes remain difficult; the full scores cover all 5,554
 test intervals, not just the 144 plotted observations. The learning curve
 shows fluctuating validation errors despite decreasing training error.
 No settings were changed after seeing these results. No other models were
-retrained. Dashboard shell remains the next Day 4 task.
+retrained. The dashboard shell remains the next implementation task.
 
-DAY 4 DASHBOARD COMPLETED - 2026-10-15
+DASHBOARD COMPLETED - 2026-10-15
 Implemented the reviewed layout as a local Streamlit application in dashboard/.
 Entry point: dashboard/app.py; helpers: artifacts.py, charts.py, styles.css.
 Added .streamlit/config.toml with light/teal theme, local loopback binding and
@@ -1003,11 +1003,12 @@ dashboard-allocation.png and browser-check.json. These are local, Git-ignored.
 The 43 earlier preparation/result hashes and both raw sample hashes remained
 unchanged. No earlier experiment or model was retrained in this dashboard step.
 
-ROADMAP
-Day 4 is complete: LSTM/GRU/Transformer 10-minute comparisons and dashboard
-shell work. Next is Day 5: complete all five predictors at 30 and 60 minutes.
+MILESTONE STATUS
+The initial model comparison and dashboard milestones are complete:
+LSTM/GRU/Transformer 10-minute comparisons and dashboard shell work.
+Next: complete all five predictors at 30 and 60 minutes.
 Full allocation review, final dashboard polish, reporting and presentation
-remain later work. Do not describe the overall ten-day project as complete.
+remain later work. Do not describe the overall project as complete.
 References for interface/testing APIs:
 https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest
 https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart

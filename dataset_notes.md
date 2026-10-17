@@ -12,7 +12,7 @@ The project has restarted with **CESNET-TimeSeries24**, with institution 0 selec
 
 Verify the dataset documentation and inspect one institution-level CSV alongside its timestamp mapping. Do this before writing a parser or deciding preprocessing rules.
 
-The documentation review, institution comparison, and Day 2 preparation are complete. Findings and source links are in `research_notes.txt`. The selected outage/boundary policy preserves raw observations and excludes unsafe modeling paths.
+The documentation review, institution comparison, and data preparation are complete. Findings and source links are in `research_notes.txt`. The selected outage/boundary policy preserves raw observations and excludes unsafe modeling paths.
 
 ## Local inspection files
 
@@ -92,7 +92,7 @@ Missing inputs can be forward-filled using earlier observed values only within a
 
 The table is unscaled. The complete preparation command constructs rolling statistics inside input windows, creates splits and forecasts' input/target windows, and fits training-only scalers.
 
-## Day 2 checkpoint complete
+## Data preparation checkpoint complete
 
 Run `python -m data_processing.prepare_dataset`, then `python -m unittest -v tests.test_preparation`. Use 18 observations per input and separate direct 10-, 30-, and 60-minute targets. Rolling mean and population standard deviation use the latest up to six values inside each input window. No hidden history or future values contribute.
 
@@ -100,6 +100,6 @@ Chronological cuts use 70%/85% of the full ordered observation timeline before e
 
 The origin is the last input interval's nominal completion (supplied start +600 seconds). This is an offline availability assumption, not verified live export timing. Every full input-to-target path is regular at 600 seconds, avoids policy exclusions, and stays within one timestamp block. Missing targets are ineligible.
 
-Scalers are fitted separately per horizon using training windows only. The saved configuration and source hashes make the preparation reproducible. The traffic/quality plot and path checks were generated, and all three causal/exclusion/scaler tests passed. Model training and allocation experiments remain Day 3 onward.
+Scalers are fitted separately per horizon using training windows only. The saved configuration and source hashes make the preparation reproducible. The traffic/quality plot and path checks were generated, and all three causal/exclusion/scaler tests passed. Model training and allocation form the subsequent experiment milestones.
 
 Anomalies may be real traffic events or measurement problems. We will not remove them solely because they look unusual, and we cannot guarantee an anomaly-free dataset.
