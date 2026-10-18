@@ -1012,3 +1012,249 @@ remain later work. Do not describe the overall project as complete.
 References for interface/testing APIs:
 https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest
 https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart
+
+THIRTY-MINUTE FORECAST EXPERIMENT - SETTINGS AND INPUT CHECKS, 2026-10-17
+Existing prepared arrays are reused without regenerating data or windows.
+Three-hour histories (18 records), direct three-interval/30-minute lead.
+Verified 28,121 training, 4,029 validation and 5,548 test windows. Complete
+paths avoid exclusions and timestamp breaks; IDs, origin/target timestamps,
+actual rates, split cutoffs, causal features, raw hashes and training-only
+scalers matched the saved arrays/configuration. No missing targets filled.
+All model architectures and training settings remain fixed: seed 42, Adam
+0.001, batch 64, at most 30 epochs, validation early stopping patience five.
+Baselines remain persistence and mean of the last four observed intervals.
+CPU inference uses the same 25 warm-up/1,000-call protocol. No new tuning.
+Models run sequentially on CUDA. Only 30-minute output folders are created;
+earlier 10-minute models/results and the 60-minute inputs are preserved.
+Different horizons have slightly different eligible targets after boundary
+and full-path exclusion checks: test n=5,554 at 10 minutes and 5,548 at
+30 minutes. Within each horizon all predictors must share identical targets.
+
+THIRTY-MINUTE FORECAST RESULTS AND VERIFICATION - 2026-10-17
+All five predictors completed on the unchanged 30-minute windows.
+{
+  "neural_runs": [
+    {
+      "model": "lstm",
+      "epochs_completed": 6,
+      "best_epoch": 1,
+      "training_time_s": 24.59217190000345,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    },
+    {
+      "model": "gru",
+      "epochs_completed": 9,
+      "best_epoch": 4,
+      "training_time_s": 20.13231689999884,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    },
+    {
+      "model": "transformer",
+      "epochs_completed": 9,
+      "best_epoch": 4,
+      "training_time_s": 35.72589220000009,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "model": "transformer",
+      "horizon_minutes": "30",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "25.72162148126826",
+      "rmse_mbps": "36.00628586406966",
+      "mape_pct": "15.633854526228387",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8144906764718576",
+      "training_time_s": "35.72589220000009",
+      "cpu_inference_ms": "0.6477131000028749"
+    },
+    {
+      "model": "transformer",
+      "horizon_minutes": "30",
+      "split": "test",
+      "n_samples": "5548",
+      "mae_mbps": "21.605535039592333",
+      "rmse_mbps": "32.34044296918471",
+      "mape_pct": "21.685210264169083",
+      "mape_included": "5548",
+      "mape_excluded": "0",
+      "r2": "0.6983816455808656",
+      "training_time_s": "35.72589220000009",
+      "cpu_inference_ms": "0.7071995999976934"
+    },
+    {
+      "model": "persistence",
+      "horizon_minutes": "30",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "34.23729529058989",
+      "rmse_mbps": "47.508432540625144",
+      "mape_pct": "21.655066681900497",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.677038692119313",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.0002581999979156535"
+    },
+    {
+      "model": "persistence",
+      "horizon_minutes": "30",
+      "split": "test",
+      "n_samples": "5548",
+      "mae_mbps": "26.26951428745494",
+      "rmse_mbps": "41.081478469515105",
+      "mape_pct": "25.693232139281015",
+      "mape_included": "5548",
+      "mape_excluded": "0",
+      "r2": "0.513303786271254",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.00024959999791462906"
+    },
+    {
+      "model": "moving_average_4",
+      "horizon_minutes": "30",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "31.513561075298256",
+      "rmse_mbps": "42.901122565440666",
+      "mape_pct": "20.388345302936447",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.7366420676205025",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.0034033000010822434"
+    },
+    {
+      "model": "moving_average_4",
+      "horizon_minutes": "30",
+      "split": "test",
+      "n_samples": "5548",
+      "mae_mbps": "23.293956503591087",
+      "rmse_mbps": "35.06041116454432",
+      "mape_pct": "23.362904982336445",
+      "mape_included": "5548",
+      "mape_excluded": "0",
+      "r2": "0.6455133798974317",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.003385899999557296"
+    },
+    {
+      "model": "lstm",
+      "horizon_minutes": "30",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "25.851897580158713",
+      "rmse_mbps": "36.260047612752594",
+      "mape_pct": "15.781057104381432",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8118666315195509",
+      "training_time_s": "24.59217190000345",
+      "cpu_inference_ms": "0.5708000000013271"
+    },
+    {
+      "model": "lstm",
+      "horizon_minutes": "30",
+      "split": "test",
+      "n_samples": "5548",
+      "mae_mbps": "23.50164100049165",
+      "rmse_mbps": "33.610573106266685",
+      "mape_pct": "24.51726964392471",
+      "mape_included": "5548",
+      "mape_excluded": "0",
+      "r2": "0.6742250599548051",
+      "training_time_s": "24.59217190000345",
+      "cpu_inference_ms": "0.8144269000003987"
+    },
+    {
+      "model": "gru",
+      "horizon_minutes": "30",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "25.81648664865311",
+      "rmse_mbps": "36.377647609455224",
+      "mape_pct": "15.401138237954006",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8106443297044876",
+      "training_time_s": "20.13231689999884",
+      "cpu_inference_ms": "0.801031700000749"
+    },
+    {
+      "model": "gru",
+      "horizon_minutes": "30",
+      "split": "test",
+      "n_samples": "5548",
+      "mae_mbps": "21.495440287273265",
+      "rmse_mbps": "32.289804341367976",
+      "mape_pct": "20.84687087874619",
+      "mape_included": "5548",
+      "mape_excluded": "0",
+      "r2": "0.6993254534292269",
+      "training_time_s": "20.13231689999884",
+      "cpu_inference_ms": "0.794628500003455"
+    }
+  ]
+}
+
+INTERPRETATION
+GRU has the lowest test MAE/RMSE/MAPE of these five fixed predictors at
+30 minutes. GRU test RMSE 32.289804341367976 Mbps is close to Transformer
+32.34044296918471 Mbps; one seed does not establish a reliable model ranking.
+Transformer has the lowest neural validation RMSE (36.00628586406966 Mbps),
+versus LSTM 36.260047612752594 and GRU 36.377647609455224. Validation and
+test rankings differ; test results did not change settings/checkpoint rules.
+LSTM beats moving average on RMSE but has higher MAE and MAPE. Larger
+horizons increased test MAE and RMSE for each model in the recorded runs;
+MAPE did not increase uniformly. Eligible target cohorts also differ between
+horizons, so avoid presenting this as a perfectly paired causal experiment.
+Training duration varies with completed epochs and system load. The
+30-minute models used the same architectures, not a newly optimized pipeline;
+runtime differences from earlier runs do not isolate architecture speed.
+
+VERIFICATION AND EVIDENCE
+Each neural checkpoint reproduced all 9,577 saved validation/test forecasts
+(4,029 + 5,548), within rtol=1e-5 and atol=1e-4 Mbps. Actual observations
+matched NPZ targets. Direct NumPy MAE/RMSE/MAPE/R2 calculations matched CSVs;
+zero-target MAPE exclusions and negative prediction counts were checked.
+All selected epochs matched minimum validation loss in saved histories.
+Baselines matched the latest input and last-four-input mean exactly within
+the numeric check tolerance. All models shared the same 30-minute timestamped
+targets. All ten model/split comparison rows matched their original metrics.
+All 55 pre-existing raw/prepared/10-minute/allocation files
+retained their SHA256 hashes. The 60-minute inputs were preserved.
+New evidence: results/<model>/30min/{best_model.pt,metrics.csv,predictions.csv,
+training_history.csv,run_config.json,scalers.json,preparation_config.json,
+comparison.csv,test_prefix.png,learning_curve.png} for neural models.
+Baselines: results/baselines/30min/ metrics, forecasts, configuration and plot.
+Combined result table: results/comparison/forecast_metrics_10_30min.csv
+Comparison plot: results/comparison/forecast_test_10_30min.png
+Verification record: results/comparison/verification_30min.json
+The combined plot and first-144-target forecast comparison were visually checked.
+
+DASHBOARD CHECK
+Both 10- and 30-minute horizons were discovered without source changes.
+Streamlit AppTest confirmed all 40 main metric cards across five models and
+two 30-minute splits matched saved results. The 30-minute allocation view
+correctly reported no matching experiment; 10-minute allocation still worked.
+A real Edge browser selected 30 minutes and GRU, showing MAE 21.495 Mbps,
+RMSE 32.290 Mbps, MAPE 20.85%, R2 0.699, with no browser page errors.
+Evidence: results/comparison/dashboard_30min_check.json and
+results/dashboard/{browser-30min-check.json,dashboard-30min.png}.
+
+MILESTONE STATUS
+The 30-minute forecast comparison is complete. The 60-minute forecast
+comparison is next. Allocation expansion/review and final reporting remain
+pending. No commits or pushes were made in this experiment step.

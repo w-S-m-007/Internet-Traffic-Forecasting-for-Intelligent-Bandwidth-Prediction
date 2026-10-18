@@ -188,3 +188,22 @@ dashboard-only checks work without PyTorch. All 31 tests passed.
 Browser QA used the bundled Node/Playwright runtime and installed Edge;
 Playwright is not an application dependency or a new VirtEnv package.
 Launch: python -m streamlit run dashboard/app.py (from repository root).
+
+THIRTY-MINUTE EXPERIMENT UPDATE - 2026-10-17
+No new packages or model-source changes were needed. Existing preparation and
+CLI horizon flags support the run. Inputs: windows_30min.npz/.csv,
+scalers_30min.json and preparation_config.json in data/prepared/.
+Commands: python -m experiments.evaluate_baselines --horizon 30;
+python -m experiments.train_lstm --horizon 30 --device cuda;
+python -m experiments.train_gru --horizon 30 --device cuda;
+python -m experiments.train_transformer --horizon 30 --device cuda.
+Saved per-model outputs are under results/<model>/30min/, with both baselines
+in results/baselines/30min/. The shared comparison/verification exports are in
+results/comparison/. Baseline results precede LSTM; GRU then reads matching
+LSTM/baselines; Transformer reads all earlier matching forecasts/metrics.
+All predictors use the same 4,029 validation and 5,548 test targets.
+Checkpoint, metric, alignment and source-hash checks passed. Existing
+10-minute results, raw samples and all prepared horizons were preserved.
+Dashboard automatically discovers the new complete runs and validates them.
+No model loading or PyTorch import was needed for the dashboard checks.
+The 60-minute run and allocation expansion remain pending.

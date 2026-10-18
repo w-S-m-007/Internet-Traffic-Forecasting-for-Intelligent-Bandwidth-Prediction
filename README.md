@@ -4,7 +4,7 @@ An academic project investigating traffic forecasting with LSTM, GRU, and a smal
 
 ## Current progress
 
-**Data preparation, the initial forecasting and allocation experiments, and the dashboard are complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. All five predictors have 10-minute results, an initial allocation experiment is saved, and the local dashboard reads those artifacts without retraining.
+**Data preparation, the initial forecasting and allocation experiments, and the dashboard are complete.** CESNET-TimeSeries24 institution 0 is the primary experimental series, selected after comparing all 283 institutions. All five predictors have 10- and 30-minute results, an initial allocation experiment is saved, and the local dashboard reads those artifacts without retraining.
 
 Implemented:
 
@@ -16,12 +16,12 @@ Implemented:
 - Build unscaled traffic-rate and calendar features with observation and eligibility flags.
 - Generate chronological splits, direct forecasting windows, training-only scalers, and a traffic/quality plot.
 - Check full window paths, timestamp alignment, causal features, and scaler leakage.
-- Evaluate persistence, moving-average, LSTM, GRU and Transformer forecasts at 10 minutes.
+- Evaluate persistence, moving-average, LSTM, GRU and Transformer forecasts at 10 and 30 minutes.
 - Compare reactive and forecast-based allocation at identical safety margins.
 - Browse saved forecasts, model comparisons and allocation with a local Streamlit dashboard.
 - Record findings, evidence, and unresolved questions in the research notes.
 
-All five predictors have completed the 10-minute experiment. The 30/60-minute comparisons and expanded allocation review remain pending. Numerical claims in earlier research drafts are not results from this implementation.
+All five predictors have completed the 10- and 30-minute experiments. The 60-minute comparison and expanded allocation review remain pending. Numerical claims in earlier research drafts are not results from this implementation.
 
 ## Files
 
@@ -230,7 +230,7 @@ All ten unit checks passed. The saved checkpoint reproduced all validation and t
 
 ## Next milestone
 
-The 10-minute model comparison and dashboard are complete. Next, run all five predictors at 30 and 60 minutes, followed by the full allocation review.
+The 10- and 30-minute model comparisons and dashboard are complete. Next, run all five predictors at 60 minutes, followed by the full allocation review.
 
 ## Initial bandwidth allocation experiment
 
@@ -317,7 +317,38 @@ Evidence: `results/transformer/10min/comparison.csv` contains all ten model/spli
 
 All 24 tests passed before training. The saved checkpoint reproduced all 9,583 validation/test forecasts within `rtol=1e-5, atol=1e-4` Mbps. Recomputed metrics matched CSVs, all five predictors matched the same timestamped targets, and all 43 previous preparation/result file hashes remained unchanged. Raw sample hashes also matched the preparation manifest. Both new figures were visually checked.
 
-The 30/60-minute comparisons and the expanded allocation review follow later; allocation currently still uses reactive, moving-average and LSTM policies.
+The 60-minute comparison and expanded allocation review follow later; allocation currently still uses reactive, moving-average and LSTM policies at 10 minutes.
+
+## Thirty-minute forecasting experiment
+
+The three-hour input history and 10-minute sampling remain fixed. Separate models directly predict three intervals (30 minutes) ahead. The existing exclusions, chronological cuts, training-only scalers, model architectures, seed 42 and stopping rules are reused. Windows contain 28,121 training, 4,029 validation and 5,548 test targets.
+
+Run the existing commands in sequence:
+
+```bash
+python -m experiments.evaluate_baselines --horizon 30
+python -m experiments.train_lstm --horizon 30 --device cuda
+python -m experiments.train_gru --horizon 30 --device cuda
+python -m experiments.train_transformer --horizon 30 --device cuda
+```
+
+Each command writes to its own `results/<model>/30min/` folder. Baselines share `results/baselines/30min/`. Use `--device cpu` for neural training without CUDA. Preparation is already complete; regenerating it is not needed when the saved inputs are present and verified.
+
+| Predictor | Test MAE (Mbps) | Test RMSE (Mbps) | Test MAPE (%) | Test R² |
+| --- | ---: | ---: | ---: | ---: |
+| Persistence | 26.270 | 41.081 | 25.693 | 0.513 |
+| Moving average | 23.294 | 35.060 | 23.363 | 0.646 |
+| LSTM | 23.502 | 33.611 | 24.517 | 0.674 |
+| GRU | 21.495 | 32.290 | 20.847 | 0.699 |
+| Transformer | 21.606 | 32.340 | 21.685 | 0.698 |
+
+GRU has the lowest test errors in this single-seed run; its RMSE is close to the Transformer's. Transformer has the lowest neural validation RMSE (36.006 Mbps, versus 36.260 LSTM and 36.378 GRU). LSTM improves RMSE over moving average while its MAE and MAPE are higher. Keep validation and test rankings distinct; these results do not establish consistent model superiority.
+
+LSTM restored epoch 1 after completing six epochs; GRU and Transformer restored epoch 4 after completing nine. Training times were 24.59, 20.13 and 35.73 seconds respectively. Timings depend on stopping epoch and machine load as well as model implementation.
+
+Saved checkpoints reproduced all 9,577 validation/test forecasts per neural model within `rtol=1e-5, atol=1e-4` Mbps. Direct metric arithmetic, baseline definitions, target alignment, best epochs, raw-source and preparation hashes were checked. All 55 protected pre-existing data/result files remained unchanged. All observed targets were positive and the three neural models produced no negative predictions.
+
+Evidence: `results/transformer/30min/comparison.csv` contains all ten model/split rows. `results/comparison/forecast_metrics_10_30min.csv` combines both horizons, `forecast_test_10_30min.png` plots the test comparison, and `verification_30min.json` records checks and source hashes. The forecast comparison and cross-horizon figure were visually reviewed. Within each horizon all five predictors share targets; the 10-minute test set has 5,554 targets and the 30-minute set has 5,548, so cross-horizon scores are not a perfectly paired comparison.
 
 ## Run the local dashboard
 
@@ -333,7 +364,7 @@ Open **http://127.0.0.1:8501**. Stop the server with `Ctrl+C` in its terminal. T
 
 Overview follows the reviewed mockup: model metrics, actual-versus-predicted traffic, a model comparison table and allocation summary. Sidebar views provide a larger forecasting or allocation area. Select validation/test, a model, an available horizon, chart history and replay position. A replay interval changes the displayed chart and interval readout; the main scores remain the full eligible split. Dates are real UTC targets. Lines break across excluded intervals rather than joining through gaps.
 
-Only 10-minute results are currently available. Future 30/60-minute results are discovered from complete saved runs. Allocation has its own clearly labeled model control for LSTM or moving average, because GRU/Transformer allocation has not yet been evaluated. Both policies use the selected 5/10/15/20% margin. Validation-selected defaults and the unmet 1% target remain visible; sliders do not rewrite those defaults or result files. Comparison, forecasts and allocation replay can be downloaded as CSVs.
+10- and 30-minute results are currently available. Future 60-minute results are discovered from complete saved runs. Allocation remains a 10-minute experiment with its own clearly labeled LSTM/moving-average control; GRU/Transformer allocation has not yet been evaluated. Both policies use the selected 5/10/15/20% margin. Validation-selected defaults and the unmet 1% target remain visible; sliders do not rewrite those defaults or result files. Comparison, forecasts and allocation replay can be downloaded as CSVs.
 
 The loader verifies common prepared-data signatures, model/target identities, UTC leads, observed demand and saved forecasting metrics. Allocation checks its forecast-source hashes, all saved margin/split scores and validation defaults. Replaced result files invalidate the in-memory cache. Corrupt/incomplete runs produce an explanatory message. An empty checkout shows regeneration commands.
 
@@ -351,3 +382,5 @@ python -m pip check
 ```
 
 All **31 tests** pass, including seven dashboard checks. These cover UI model/split/page/margin changes, independent result fixtures, corrupt metrics, misaligned targets, stale allocation sources, excluded chart gaps and the empty-results state. Local browser QA images are saved under `results/dashboard/` and excluded from Git.
+
+The 30-minute results were also checked through Streamlit AppTest: all 40 metric cards across five models and two splits matched their saved CSVs; 30-minute allocation stayed unavailable and the existing 10-minute allocation remained accessible. Evidence is in `results/comparison/dashboard_30min_check.json`.
