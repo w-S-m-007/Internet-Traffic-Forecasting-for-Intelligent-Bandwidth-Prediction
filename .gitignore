@@ -45,3 +45,6 @@ Desktop.ini
 
 # Local PDF build logs
 /output/pdf/*.log
+
+# GitHub Pages build output (sources and exported snapshot are tracked in web/)
+/_site/
