@@ -1,0 +1,15 @@
+{
+  "checked_at_utc": "2026-10-22T21:23:08.474Z",
+  "browser_errors": [],
+  "download_verified": true,
+  "covered": [
+    "10/30/60-minute forecasts",
+    "model selection",
+    "historical replay",
+    "comparison CSV download",
+    "GRU/Transformer/LSTM allocation",
+    "5% and20% equal margins",
+    "validation/test selection"
+  ],
+  "audio": "Silent screen recording; speaking guide in docs/presentation/demo_script.md"
+}

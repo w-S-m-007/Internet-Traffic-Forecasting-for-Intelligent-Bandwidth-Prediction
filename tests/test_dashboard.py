@@ -27,7 +27,7 @@ def save_csv(path, rows):
         writer.writerows(rows)
 
 
-def make_results(project):
+def make_results(project, expanded=False):
     """Small saved-results fixture, independent of Git-ignored real data."""
     demand = {"validation": [100, 110, 200, 100, 120, 100, 130, 100],
               "test": [100, 200, 100, 130, 100, 140, 100, 110]}
@@ -59,7 +59,10 @@ def make_results(project):
                   ("windows_10min.npz", "windows_10min.csv", "preparation_config.json")}}
         (folder / "run_config.json").write_text(json.dumps(config), encoding="utf-8")
     metrics = []
-    for policy, model in (("reactive", "persistence"), ("proactive_lstm", "lstm"), ("proactive_moving_average_4", "moving_average_4")):
+    policies = {"reactive": "persistence", "proactive_lstm": "lstm", "proactive_moving_average_4": "moving_average_4"}
+    if expanded:
+        policies.update({"proactive_gru": "gru", "proactive_transformer": "transformer"})
+    for policy, model in policies.items():
         for split, actual in demand.items():
             for margin in MARGINS:
                 _, scores = allocate(actual, predictors[model][split], margin)
@@ -67,10 +70,11 @@ def make_results(project):
     folder = project / "results/allocation/10min"
     save_csv(folder / "metrics.csv", metrics)
     sources = {str(path.relative_to(project)).replace("\\", "/"): hashlib.sha256(path.read_bytes()).hexdigest()
-               for source in ("baselines", "lstm") for path in (project / f"results/{source}/10min").iterdir()
+               for source in (("baselines", "lstm", "gru", "transformer") if expanded else ("baselines", "lstm"))
+               for path in (project / f"results/{source}/10min").iterdir()
                if path.name in ("predictions.csv", "run_config.json")}
     defaults = {policy: select_margin([row for row in metrics if row["policy"] == policy and row["split"] == "validation"])
-                for policy in ("reactive", "proactive_lstm", "proactive_moving_average_4")}
+                for policy in policies}
     config = {"horizon_minutes": 10, "interval_seconds": 600, "margins": list(MARGINS),
               "source_sha256": sources, "selected_defaults": defaults}
     (folder / "run_config.json").write_text(json.dumps(config), encoding="utf-8")
@@ -158,6 +162,48 @@ class DashboardTests(unittest.TestCase):
         app = self.app(empty)
         self.assertFalse(app.exception)
         self.assertTrue(any("No saved forecast results" in item.value for item in app.info))
+
+    def test_expanded_allocation_models_use_identical_margins_and_display(self):
+        make_results(self.project, expanded=True)
+        artifacts = load_forecasts(self.project, 10)
+        config = load_allocation(self.project, artifacts)
+        self.assertEqual(len(config["selected_defaults"]), 5)
+        app = self.app()
+        app.radio(key="view").set_value("Allocation").run()
+        for model in ("lstm", "gru", "transformer", "moving_average_4"):
+            app.selectbox(key="allocation_model").set_value(model).run()
+            app.slider(key=f"margin_{model}").set_value(10).run()
+            self.assertFalse(app.exception)
+            self.assertFalse(app.error)
+            frame, scores = allocation_snapshot(artifacts, model, "test", .10)
+            np.testing.assert_allclose(frame["proactive_capacity"], np.maximum(frame["predicted_mbps"], 0) * 1.10)
+            self.assertEqual(app.metric[-1].value, f"{scores['proactive']['shortfall_pct']:,.2f}%")
+            self.assertEqual(app.metric[-2].value, f"{scores['reactive']['shortfall_pct']:,.2f}%")
+
+    def test_added_policy_metrics_and_defaults_are_validated(self):
+        make_results(self.project, expanded=True)
+        artifacts = load_forecasts(self.project, 10)
+        path = self.project / "results/allocation/10min/metrics.csv"
+        metrics = pd.read_csv(path)
+        metrics.loc[metrics["policy"] == "proactive_gru", "shortfall_pct"] += 1
+        metrics.to_csv(path, index=False)
+        with self.assertRaisesRegex(ArtifactError, "shortfall_pct"):
+            load_allocation(self.project, artifacts)
+        make_results(self.project, expanded=True)
+        path = self.project / "results/allocation/10min/run_config.json"
+        config = json.loads(path.read_text())
+        config["selected_defaults"]["proactive_transformer"]["margin"] = .05
+        path.write_text(json.dumps(config))
+        with self.assertRaisesRegex(ArtifactError, "validation-only"):
+            load_allocation(self.project, artifacts)
+
+    def test_longer_horizons_do_not_offer_allocation(self):
+        artifacts = load_forecasts(self.project, 10)
+        for horizon in (30, 60):
+            artifacts.horizon = horizon
+            self.assertIsNone(load_allocation(self.project, artifacts))
+            with self.assertRaisesRegex(ArtifactError, "10-minute"):
+                allocation_snapshot(artifacts, "gru", "test", .20)
 
 
 if __name__ == "__main__":

@@ -207,3 +207,36 @@ Checkpoint, metric, alignment and source-hash checks passed. Existing
 Dashboard automatically discovers the new complete runs and validates them.
 No model loading or PyTorch import was needed for the dashboard checks.
 The 60-minute run and allocation expansion remain pending.
+
+SIXTY-MINUTE EXPERIMENT UPDATE - 2026-10-18
+No new packages or model-source changes. Existing CLI flags and prepared
+windows_60min.npz/.csv, scalers_60min.json and preparation_config.json reused.
+Sequence: evaluate_baselines, train_lstm, train_gru, train_transformer with
+--horizon 60 (neural commands also --device cuda), all as experiments modules.
+Saved results: results/{baselines,lstm,gru,transformer}/60min/.
+Shared summaries and verification: results/comparison/. All 4,029 validation
+and 5,539 test targets agree across predictors. Saved checkpoint and metric
+checks passed; all existing data/results were hash-protected. Dashboard
+automatically discovers all three horizons and required no package changes.
+Allocation remains the saved 10-minute experiment; its review is next.
+
+FINAL WORKFLOW AND SUBMISSION UPDATE - 2026-10-22
+Application Python requirements unchanged. Full suite: 41 tests passed;
+pip check: no broken requirements. Reproduction uses the same installed
+VirtEnv and an isolated project copy with the documented raw sample.
+All 15 predictor/horizon runs regenerated, 9 checkpoint tensor sets and all
+forecast accuracy results exactly matched the original saved experiments.
+Timing values differ with machine load and remain run-specific.
+Added portable modules: scripts.reproduce, scripts.verify_results,
+scripts.summarize_results and scripts.package_submission.
+Verification binds evidence with SHA256 hashes and independently checks
+allocation replay/defaults; packaging rejects changed evidence.
+Optional report authoring: docs/requirements-report.txt (python-docx, Pillow).
+PDF export used installed Word hidden; page review used bundled pypdfium2.
+Optional slides: bundled Node @oai/artifact-tool; sources in docs/presentation.
+Optional recording: Playwright+Edge and Playwright FFmpeg1011 helper;
+FFmpeg/Winldd installed in the user Playwright cache, not into VirtEnv.
+These authoring/recording tools are not dashboard/training dependencies.
+Strict replay of existing CUDA checkpoints requires the original backend;
+CPU-only users can verify saved arithmetic without --checkpoints or retrain
+with --device cpu. Dashboard remains independent of PyTorch and CUDA.

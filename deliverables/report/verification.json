@@ -1,0 +1,15 @@
+{
+  "pdf_pages": 14,
+  "artifact_row_counts": {
+    "forecast_metrics.csv": 30,
+    "allocation_metrics.csv": 40,
+    "allocation_defaults.csv": 5
+  },
+  "source_hashes_verified": 30,
+  "rendering": "Microsoft Word hidden COM export; pypdfium2 PNGs",
+  "visual_review": "All 14 pages reviewed; revised pages 1 and 12 reviewed again; other 12 page images identical by SHA256",
+  "python_docx_version": "1.2.0",
+  "pillow_version": "12.3.0",
+  "pdf_sha256": "1cbdd9d1c220baa5bf50f823ad3e5fd2a639054948f26577064d46baa32c76a9",
+  "docx_sha256": "b51fb234ca4a3dc4d747b5e440d790dd6c559a65c7cbd0a3ffaf83a8c2948e48"
+}

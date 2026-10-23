@@ -1,6 +1,7 @@
 """Run with: python -m streamlit run dashboard/app.py (from project root)."""
 
 import sys
+from html import escape
 from pathlib import Path
 
 # Streamlit runs this file as a script; retain package imports from the root.
@@ -15,6 +16,7 @@ from dashboard.artifacts import (MODEL_LABELS, ArtifactError, allocation_snapsho
                                  available_horizons, fingerprint, load_allocation,
                                  load_forecasts, model_forecasts)
 from dashboard.charts import traffic_chart
+from dashboard.charts import comparison_chart
 
 
 @st.cache_data(show_spinner="Checking saved results…")
@@ -32,17 +34,19 @@ def number(value, decimals=3, suffix=""):
     return "—" if value is None or not np.isfinite(float(value)) else f"{value:,.{decimals}f}{suffix}"
 
 
-def comparison_panel(artifacts, split):
+def comparison_panel(artifacts, split, expanded=False):
     st.subheader(f"Model comparison · {artifacts.horizon}-minute forecasts")
     order = list(MODEL_LABELS)
     table = artifacts.metrics[artifacts.metrics["split"] == split].copy()
     table["order"] = table["model"].map(order.index)
     table = table.sort_values("order")
+    if expanded:
+        st.plotly_chart(comparison_chart(table), width="stretch", key="comparison_chart")
     table["model"] = table["model"].map(MODEL_LABELS)
     view = table[["model", "mae_mbps", "rmse_mbps", "mape_pct", "r2"]].rename(columns={
         "model": "Model", "mae_mbps": "MAE", "rmse_mbps": "RMSE", "mape_pct": "MAPE (%)", "r2": "R²"})
     styled = view.style.format({"MAE": "{:.3f}", "RMSE": "{:.3f}", "MAPE (%)": "{:.2f}", "R²": "{:.3f}"}, na_rep="—")
-    styled = styled.highlight_min(subset=["MAE", "RMSE", "MAPE (%)"], color="#ddf4ef")
+    styled = styled.highlight_min(subset=["MAE", "RMSE", "MAPE (%)"], color="#dff6ef")
     st.dataframe(styled, hide_index=True, width="stretch")
     st.caption("MAE / RMSE in nominal Mbps. Highlighted cells have the lowest error in this split. One fixed seed.")
     with st.expander("Training and inference measurements"):
@@ -62,8 +66,10 @@ def allocation_panel(artifacts, allocation, allocation_error, split, replay_targ
     if allocation is None:
         st.info("No matching allocation experiment is saved for this horizon. The initial experiment uses 10-minute forecasts.")
         return
-    model = st.selectbox("Allocation model", ["lstm", "moving_average_4"], format_func=MODEL_LABELS.get, key="allocation_model")
-    st.caption("Allocation currently covers LSTM and moving average. Forecast model selection is independent.")
+    options = [name for name in ("lstm", "gru", "transformer", "moving_average_4")
+               if f"proactive_{name}" in allocation["selected_defaults"]]
+    model = st.selectbox("Allocation model", options, format_func=MODEL_LABELS.get, key="allocation_model")
+    st.caption("Compare each saved proactive policy with reactive capacity at the same margin.")
     default = allocation["selected_defaults"][f"proactive_{model}"]
     margin_pct = st.slider("Safety margin", 5, 20, int(round(default["margin"] * 100)), step=5,
                            format="%d%%", key=f"margin_{model}")
@@ -101,8 +107,9 @@ def main(project_root=PROJECT):
     st.set_page_config(page_title="Traffic Forecasting", page_icon="📈", layout="wide")
     st.markdown(f"<style>{Path(__file__).with_name('styles.css').read_text()}</style>", unsafe_allow_html=True)
     with st.sidebar:
+        st.markdown('<div class="brand-mark" aria-hidden="true">⌁</div><div class="brand-eyebrow">NETWORK ANALYTICS</div>', unsafe_allow_html=True)
         st.title("Traffic Forecasting")
-        st.caption("Research prototype")
+        st.caption("Forecast demand. Explore capacity.")
         st.divider()
         st.selectbox("Dataset", ["CESNET-TimeSeries24"], disabled=True)
         st.selectbox("Institution", ["Institution 0"], disabled=True)
@@ -138,15 +145,22 @@ def main(project_root=PROJECT):
     window = forecasts.iloc[max(0, end - records):end]
     current = forecasts.iloc[end - 1]
     metric = artifacts.metrics[(artifacts.metrics["model"] == model) & (artifacts.metrics["split"] == split)].iloc[0]
-    st.title("Traffic forecasting & bandwidth allocation")
-    st.markdown(f'<p class="subheading">Institution 0 · {horizon}-minute forecasts · Historical {split} replay</p>', unsafe_allow_html=True)
+    st.markdown(f'''<section class="workspace-hero">
+<div class="hero-copy"><div class="eyebrow">TRAFFIC INTELLIGENCE / {escape(page.upper())}</div>
+<h1>See demand.<br><span>Plan ahead.</span></h1>
+<p>Internet traffic forecasting &amp; bandwidth allocation</p>
+<div class="hero-tags"><span>CESNET · Institution 0</span><span>{horizon}-minute horizon</span><span>{escape(MODEL_LABELS[model])}</span></div></div>
+<div class="hero-aside"><div class="replay-status"><i></i> HISTORICAL REPLAY</div>
+<strong>{len(forecasts):,}</strong><span>eligible {escape(split)} intervals</span>
+<small>Recorded observations · One fixed seed</small></div></section>''', unsafe_allow_html=True)
+    st.markdown('<div class="section-eyebrow">FORECAST PERFORMANCE <span>Full eligible split · Original units</span></div>', unsafe_allow_html=True)
     for column, label, field, unit, digits in zip(st.columns(4), ["MAE", "RMSE", "MAPE", "R²"],
                                                 ["mae_mbps", "rmse_mbps", "mape_pct", "r2"],
                                                 [" Mbps", " Mbps", "%", ""], [3, 3, 2, 3]):
         column.metric(label, number(metric[field], digits, unit))
     st.caption(f"{len(forecasts):,} eligible {split} intervals · {MODEL_LABELS[model]} · One fixed seed · Metrics use the full split")
     if page in ("Overview", "Forecasts"):
-        with st.container(border=True):
+        with st.container(border=True, key="forecast_surface"):
             st.subheader("Actual vs predicted traffic")
             st.caption(f"{MODEL_LABELS[model]} · {len(window)} observed intervals · {window.iloc[0]['target_completion_utc']:%d %b %Y %H:%M} to {current['target_completion_utc']:%d %b %Y %H:%M} UTC")
             st.plotly_chart(traffic_chart(window, {"Actual": "actual_mbps", "Forecast": "predicted_mbps"}), width="stretch", key="forecast_chart")
@@ -156,15 +170,15 @@ def main(project_root=PROJECT):
                                    file_name=f"forecasts_{model}_{horizon}min_{split}.csv", mime="text/csv")
     if page == "Overview":
         left, right = st.columns([1.15, 1], gap="medium")
-        with left, st.container(border=True):
+        with left, st.container(border=True, key="comparison_surface"):
             comparison_panel(artifacts, split)
-        with right, st.container(border=True):
+        with right, st.container(border=True, key="allocation_surface"):
             allocation_panel(artifacts, allocation, allocation_error, split, current["target_id"], window)
     elif page == "Comparison":
-        with st.container(border=True):
-            comparison_panel(artifacts, split)
+        with st.container(border=True, key="comparison_surface"):
+            comparison_panel(artifacts, split, expanded=True)
     elif page == "Allocation":
-        with st.container(border=True):
+        with st.container(border=True, key="allocation_surface"):
             allocation_panel(artifacts, allocation, allocation_error, split, current["target_id"], window, expanded=True)
     with st.expander("Data definitions and limitations"):
         st.write("Nominal recorded Mbps = n_bytes × 8 / (600 × 1,000,000). This includes both traffic directions and is not physical-link utilization. The experiment excludes the recorded outage policy dates and guarded timestamp boundaries.")

@@ -1258,3 +1258,464 @@ MILESTONE STATUS
 The 30-minute forecast comparison is complete. The 60-minute forecast
 comparison is next. Allocation expansion/review and final reporting remain
 pending. No commits or pushes were made in this experiment step.
+
+SIXTY-MINUTE FORECAST EXPERIMENT - SETTINGS AND INPUT CHECKS, 2026-10-18
+Existing prepared arrays reused without regenerating data or windows.
+Three-hour histories (18 records), direct six-interval/60-minute lead.
+Verified 28,109 training, 4,029 validation and 5,539 test windows. Full
+paths avoid exclusions and timestamp breaks. Raw hashes, IDs, causal
+features, target alignment, split cuts and train-only scalers verified.
+All architectures and settings unchanged: seed 42, Adam 0.001, batch 64,
+maximum 30 epochs and validation early stopping patience five. Baselines
+are persistence and mean of last four inputs. CPU timing retains 25 warmup
+and 1,000 measured calls. Models run sequentially on CUDA, without tuning.
+Existing data and all earlier results are protected by a hash manifest.
+Test cohorts differ: 10 min 5,554; 30 min 5,548; 60 min 5,539. Within each
+horizon all predictors must use identical targets. Allocation remains a
+10-minute experiment, with no allocation claim at longer horizons.
+
+SIXTY-MINUTE FORECAST RESULTS AND VERIFICATION - 2026-10-18
+The target is one nominal 10-minute interval completing 60 minutes after
+forecast origin, not the mean or total demand over an entire future hour.
+Machine-readable evidence (all values from generated files):
+{
+  "models": [
+    {
+      "model": "lstm",
+      "epochs_completed": 12,
+      "best_epoch": 7,
+      "training_time_s": 44.26148620000458,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    },
+    {
+      "model": "gru",
+      "epochs_completed": 12,
+      "best_epoch": 7,
+      "training_time_s": 56.06346609999309,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    },
+    {
+      "model": "transformer",
+      "epochs_completed": 12,
+      "best_epoch": 7,
+      "training_time_s": 130.02647370001068,
+      "negative_predictions": {
+        "validation": 0,
+        "test": 0
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "model": "transformer",
+      "horizon_minutes": "60",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "27.545479612265513",
+      "rmse_mbps": "37.711332057141874",
+      "mape_pct": "17.711355994617694",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.7965054241947267",
+      "training_time_s": "130.02647370001068",
+      "cpu_inference_ms": "2.0467230000067502"
+    },
+    {
+      "model": "transformer",
+      "horizon_minutes": "60",
+      "split": "test",
+      "n_samples": "5539",
+      "mae_mbps": "29.234653411415415",
+      "rmse_mbps": "38.5368765479495",
+      "mape_pct": "32.52995807915495",
+      "mape_included": "5539",
+      "mape_excluded": "0",
+      "r2": "0.5719149614010649",
+      "training_time_s": "130.02647370001068",
+      "cpu_inference_ms": "2.1757223999884445"
+    },
+    {
+      "model": "persistence",
+      "horizon_minutes": "60",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "40.56763805377679",
+      "rmse_mbps": "54.719057633246166",
+      "mape_pct": "26.64028442322356",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.5715636505077517",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.0004298999847378582"
+    },
+    {
+      "model": "persistence",
+      "horizon_minutes": "60",
+      "split": "test",
+      "n_samples": "5539",
+      "mae_mbps": "29.114845892151408",
+      "rmse_mbps": "43.754446352767026",
+      "mape_pct": "28.975979384840002",
+      "mape_included": "5539",
+      "mape_excluded": "0",
+      "r2": "0.4481495361678719",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.00042650001705624163"
+    },
+    {
+      "model": "moving_average_4",
+      "horizon_minutes": "60",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "39.018742790172084",
+      "rmse_mbps": "51.57516089043932",
+      "mape_pct": "26.346365980790605",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.6193811661435047",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.003639100003056228"
+    },
+    {
+      "model": "moving_average_4",
+      "horizon_minutes": "60",
+      "split": "test",
+      "n_samples": "5539",
+      "mae_mbps": "27.02450768862791",
+      "rmse_mbps": "38.66801799811975",
+      "mape_pct": "27.973475073575166",
+      "mape_included": "5539",
+      "mape_excluded": "0",
+      "r2": "0.5689964469900777",
+      "training_time_s": "0.0",
+      "cpu_inference_ms": "0.003649400023277849"
+    },
+    {
+      "model": "lstm",
+      "horizon_minutes": "60",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "26.56600345258201",
+      "rmse_mbps": "37.39236031222219",
+      "mape_pct": "16.134831012010405",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.7999332803935411",
+      "training_time_s": "44.26148620000458",
+      "cpu_inference_ms": "1.1123034000047483"
+    },
+    {
+      "model": "lstm",
+      "horizon_minutes": "60",
+      "split": "test",
+      "n_samples": "5539",
+      "mae_mbps": "24.70420377587324",
+      "rmse_mbps": "35.09078560944205",
+      "mape_pct": "25.32074391891942",
+      "mape_included": "5539",
+      "mape_excluded": "0",
+      "r2": "0.6450532461328277",
+      "training_time_s": "44.26148620000458",
+      "cpu_inference_ms": "1.1218260000168812"
+    },
+    {
+      "model": "gru",
+      "horizon_minutes": "60",
+      "split": "validation",
+      "n_samples": "4029",
+      "mae_mbps": "26.55183866981243",
+      "rmse_mbps": "37.2298724236652",
+      "mape_pct": "16.276509303819054",
+      "mape_included": "4029",
+      "mape_excluded": "0",
+      "r2": "0.8016682757866126",
+      "training_time_s": "56.06346609999309",
+      "cpu_inference_ms": "2.3148693999974057"
+    },
+    {
+      "model": "gru",
+      "horizon_minutes": "60",
+      "split": "test",
+      "n_samples": "5539",
+      "mae_mbps": "24.505810246879705",
+      "rmse_mbps": "34.78519899888239",
+      "mape_pct": "25.665823771087442",
+      "mape_included": "5539",
+      "mape_excluded": "0",
+      "r2": "0.6512084053036451",
+      "training_time_s": "56.06346609999309",
+      "cpu_inference_ms": "2.6490367999940645"
+    }
+  ],
+  "verified_checkpoint_predictions_per_model": 9568,
+  "unchanged_existing_files": 98,
+  "checks": "PASS: checkpoint forecasts, direct metric arithmetic, baseline definitions, IDs/timestamps, source hashes and best epochs",
+  "target_definition": "Nominal average Mbps of one 10-minute interval completing 60 minutes after forecast origin, not the mean or total over the next hour",
+  "limitation": "One fixed seed; 10/30/60-minute eligible target sets differ. No service/allocation claim at 30 or 60 minutes."
+}
+
+VALIDATION RMSE
+Persistence: 54.719 Mbps; Moving average: 51.575 Mbps; LSTM: 37.392 Mbps; GRU: 37.230 Mbps; Transformer: 37.711 Mbps
+
+VERIFICATION AND EVIDENCE
+Prepared input/scaler reconstruction and all source hashes matched. Each
+checkpoint reproduced all 9,568 held-out forecasts at rtol=1e-5, atol=1e-4 Mbps.
+Full target paths, UTC leads, split cuts, metrics, baseline formulae, selected
+epochs and shared model targets were checked. Protected file hashes unchanged: 98.
+All targets positive; no MAPE exclusions; no negative neural forecasts.
+Combined table: results/comparison/forecast_metrics_10_30_60min.csv
+Combined figure: results/comparison/forecast_test_10_30_60min.png
+Verification and SHA256 manifest: results/comparison/verification_60min.json
+UI metrics: results/comparison/dashboard_60min_check.json
+Browser: results/dashboard/{browser-60min-check.json,dashboard-60min.png}
+Dashboard discovered 10/30/60 minutes, all 40 main 60-minute metric cards
+matched generated metrics, and 10-minute allocation remained accessible.
+No matching allocation experiment is reported at 60 minutes, as expected.
+The browser rendered 60-minute GRU results without page errors.
+
+INTERPRETATION
+GRU has the lowest test MAE/RMSE and neural validation RMSE. LSTM has the
+lowest test MAPE. Transformer only slightly improves RMSE over moving
+average while its MAE/MAPE are higher; its MAE/MAPE exceed persistence too.
+The 10-minute Transformer result does not extend uniformly to 60 minutes.
+No tuning was introduced to change this outcome.
+
+LIMITATIONS AND MILESTONE STATUS
+One fixed seed, one institution and different eligible target cohorts across
+horizons do not establish general superiority or uncertainty bounds. Timings
+vary with system load and number of epochs. Settings stayed fixed; no test
+retuning. All three forecasting horizons are complete. Expanded allocation
+review and final reporting remain pending. No commits or pushes made.
+
+VISUAL REVIEW
+The combined horizon comparison, first-144-target forecast plot, Transformer
+learning curve and actual 60-minute dashboard rendering were inspected.
+Plots use the saved results; the short forecast illustration is not the
+full test split used by the metric tables. No new dependencies or model
+source changes were required for this experiment.
+
+PROJECT COMPLETION AND SUBMISSION CHECKS - 2026-10-22
+Expanded ten-minute allocation to GRU and Transformer, keeping original
+three-policy results identical. All five predictors now use equal 5/10/15/20%
+margins. Each policy independently selects its default on validation; all
+five fail the 1%shortfall target and use the 20%fallback. No longer-horizon
+allocation or production-service claim is made. Full precision default test
+metrics (decimal Mbps and MB) from generated CSV:
+[
+  {
+    "policy": "reactive",
+    "horizon_minutes": "10",
+    "split": "test",
+    "margin": "0.2",
+    "n_intervals": "5554",
+    "shortfall_intervals": "1302",
+    "shortfall_pct": "23.44256391789701",
+    "deficit_volume_mb": "2127195.5487402007",
+    "mean_capacity_mbps": "140.21410169993518",
+    "mean_overprovision_mbps": "28.47770175462777",
+    "overprovision_volume_mb": "11862386.665890198",
+    "served_demand_to_capacity_ratio": "0.7968984473789132"
+  },
+  {
+    "policy": "proactive_moving_average_4",
+    "horizon_minutes": "10",
+    "split": "test",
+    "margin": "0.2",
+    "n_intervals": "5554",
+    "shortfall_intervals": "1047",
+    "shortfall_pct": "18.851278357940224",
+    "deficit_volume_mb": "1685298.9022665",
+    "mean_capacity_mbps": "140.19131900084335",
+    "mean_overprovision_mbps": "27.394070066282076",
+    "overprovision_volume_mb": "11410999.8861098",
+    "served_demand_to_capacity_ratio": "0.8045951043080116"
+  },
+  {
+    "policy": "proactive_lstm",
+    "horizon_minutes": "10",
+    "split": "test",
+    "margin": "0.2",
+    "n_intervals": "5554",
+    "shortfall_intervals": "603",
+    "shortfall_pct": "10.857039971191934",
+    "deficit_volume_mb": "1102083.2872880015",
+    "mean_capacity_mbps": "148.66915228140374",
+    "mean_overprovision_mbps": "34.471793840232195",
+    "overprovision_volume_mb": "14359225.72414872",
+    "served_demand_to_capacity_ratio": "0.7681308239722564"
+  },
+  {
+    "policy": "proactive_gru",
+    "horizon_minutes": "10",
+    "split": "test",
+    "margin": "0.2",
+    "n_intervals": "5554",
+    "shortfall_intervals": "616",
+    "shortfall_pct": "11.091105509542672",
+    "deficit_volume_mb": "1143210.0241070054",
+    "mean_capacity_mbps": "147.98450926076174",
+    "mean_overprovision_mbps": "33.88588263286354",
+    "overprovision_volume_mb": "14115164.410719309",
+    "served_demand_to_capacity_ratio": "0.7710173666004889"
+  },
+  {
+    "policy": "proactive_transformer",
+    "horizon_minutes": "10",
+    "split": "test",
+    "margin": "0.2",
+    "n_intervals": "5554",
+    "shortfall_intervals": "609",
+    "shortfall_pct": "10.965070219661504",
+    "deficit_volume_mb": "1146183.877886303",
+    "mean_capacity_mbps": "146.689631440363",
+    "mean_overprovision_mbps": "32.59814406052458",
+    "overprovision_volume_mb": "13578756.908411516",
+    "served_demand_to_capacity_ratio": "0.7777747224501179"
+  }
+]
+
+VERIFICATION
+41 behavioral tests pass; pip check reports no broken requirements.
+Independent allocation arithmetic verifies40 metric rows and191,660replay
+rows, five defaults, matching targets and provenance. The dashboard passed
+32 model/split/margin combinations. A real browser exercised horizons, model
+selection, replay, CSV download, allocation margins and split changes with
+no page errors. Saved a 74.84-second silent WebM backup recording.
+All 9 CUDA checkpoints reproduced saved forecasts at the existing strict
+tolerance. Strict CPU replay of CUDA checkpoints can differ (observed max
+0.0583 Mbps in the first failing 10-minute check). Same-backend replay is the
+strict verification route; CPU training is supported. Saved-result arithmetic
+checks and dashboard viewing do not require a GPU.
+
+CLEAN WORKFLOW ACCEPTANCE
+{
+  "checked_at_utc": "2026-10-22T17:04:42.793063+00:00",
+  "status": "PASS",
+  "command": "python -m scripts.reproduce --fresh --device cuda",
+  "scope": "Separate clean checkout with copied raw sample and shared installed Python environment; no source-download or fresh dependency-install claim",
+  "model_horizon_predictors": 15,
+  "forecast_metric_rows": 30,
+  "neural_checkpoint_tensors_identical": 9,
+  "allocation_metric_rows_identical": 40,
+  "allocation_replay_rows_identical": 191660,
+  "unit_tests_passed": 41,
+  "original_forecast_files_unchanged": 102,
+  "checks": [
+    {
+      "source": "baselines",
+      "horizon": 10,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "not applicable"
+    },
+    {
+      "source": "lstm",
+      "horizon": 10,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "gru",
+      "horizon": 10,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "transformer",
+      "horizon": 10,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "baselines",
+      "horizon": 30,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "not applicable"
+    },
+    {
+      "source": "lstm",
+      "horizon": 30,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "gru",
+      "horizon": 30,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "transformer",
+      "horizon": 30,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "baselines",
+      "horizon": 60,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "not applicable"
+    },
+    {
+      "source": "lstm",
+      "horizon": 60,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "gru",
+      "horizon": 60,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    },
+    {
+      "source": "transformer",
+      "horizon": 60,
+      "forecasts_and_accuracy": "identical",
+      "checkpoint_tensors": "identical"
+    }
+  ],
+  "timings": "Fresh timings differ with system load; original measurements remain report source",
+  "reproduction_workspace": "C:\\Users\\SHLOKM~1\\AppData\\Local\\Temp\\cn_acceptance_um03f_h5"
+}
+
+FINAL ARTIFACTS
+Report: deliverables/report/project_report.docx and project_report.pdf
+Editable presentation: deliverables/presentation/project_presentation.pptx
+Static presentation companion: deliverables/presentation/project_presentation.pdf
+Backup recording: deliverables/demo/dashboard_demo.webm
+Report source/generator: docs/project_report.md and docs/build_report.py
+Slide generator and speaking guide: docs/presentation/
+Workflow: scripts/reproduce.py; verification: scripts/verify_results.py
+Bundle command: python -m scripts.package_submission
+The bundle contains source, attributed raw sample, prepared inputs, saved
+models, forecasts, allocation replay, documents and recording with SHA256
+manifest. It excludes environments, credentials, Git metadata and full raw
+archives. Dataset attribution/license retained in DATA_ATTRIBUTION.md.
+Document and presentation render tools are separate authoring dependencies.
+One institution, one seed, explicit outage exclusions, abstract capacity and
+unmet reliability target remain research limitations. No commits or pushes.
+
+
+DASHBOARD PRESENTATION UPDATE - 2026-10-23
+Refined the local interface with a navy sidebar, contextual hero header,
+colour-accented metrics, white chart surfaces, revised traffic lines/area
+fill and an RMSE bar comparison from saved split scores. Responsive layouts
+were checked at desktop and 390px mobile widths. All 10 dashboard tests pass;
+real browser checks report no page errors. No model, data, forecast, allocation
+formula or score changes. Updated silent demo and local submission ZIP.
+Viva and code study guide added in docs/VIVA_AND_CODE_GUIDE.md.
+
+
+PRESENTATION CONCLUSION UPDATE - 2026-10-23
+Added an explicit final Conclusion slide, bringing the presentation to 15
+slides. It states the reproducible prototype outcome, model/horizon RMSE
+findings and the LSTM/reactive 20% margin tradeoff with actual generated
+numbers. The one-institution/one-seed limitation and unmet 1% validation
+target remain visible. PowerPoint and static PDF companion updated; prior
+versions preserved in private presentation build directory.

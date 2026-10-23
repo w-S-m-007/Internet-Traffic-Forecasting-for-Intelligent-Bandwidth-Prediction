@@ -3,6 +3,7 @@
 import csv
 import hashlib
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import numpy as np
 
 MARGINS = (.05, .10, .15, .20)
 SHORTFALL_LIMIT_PCT = 1.
+PROACTIVE_MODELS = ("lstm", "gru", "transformer", "moving_average_4")
 
 
 def allocate(actual, forecast, margin, interval_seconds=600):
@@ -93,21 +95,44 @@ def write_rows(path, rows):
         writer.writerows(rows)
 
 
+def plot_comparison(path, metrics):
+    """Show capacity/shortfall tradeoffs without choosing margins on test data."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    labels = {"reactive": "Reactive", "proactive_moving_average_4": "Moving average",
+              "proactive_lstm": "LSTM", "proactive_gru": "GRU", "proactive_transformer": "Transformer"}
+    figure, axes = plt.subplots(1, 2, figsize=(12, 4.8), constrained_layout=True)
+    for axis, split in zip(axes, ("validation", "test")):
+        for policy, label in labels.items():
+            selected = [row for row in metrics if row["policy"] == policy and row["split"] == split]
+            axis.plot([row["mean_capacity_mbps"] for row in selected],
+                      [row["shortfall_pct"] for row in selected], marker="o", label=label)
+        axis.axhline(SHORTFALL_LIMIT_PCT, color="grey", linestyle="--", label="1% target")
+        axis.set(title=split.title(), xlabel="Mean allocated capacity (Mbps)", ylabel="Shortfall intervals (%)")
+        axis.grid(alpha=.2)
+    axes[1].legend(fontsize=8)
+    figure.suptitle("10-minute allocation: equal 5%, 10%, 15%, 20% margins\nEach line runs from 5% at left to 20% at right")
+    figure.savefig(path, dpi=180)
+    plt.close(figure)
+
+
 def main():
     project = Path(__file__).resolve().parents[1]
     prepared = project / "data/prepared"
     baseline = project / "results/baselines/10min"
-    lstm = project / "results/lstm/10min"
+    neural = {model: project / f"results/{model}/10min" for model in ("lstm", "gru", "transformer")}
     prepared_paths = [prepared / name for name in ("windows_10min.npz", "windows_10min.csv",
                                                   "scalers_10min.json", "preparation_config.json")]
-    result_paths = [folder / name for folder in (baseline, lstm)
+    result_paths = [folder / name for folder in (baseline, *neural.values())
                     for name in ("predictions.csv", "run_config.json")]
     if not all(path.is_file() for path in prepared_paths + result_paths):
-        raise FileNotFoundError("Prepare data, evaluate 10-minute baselines and train the 10-minute LSTM first")
+        raise FileNotFoundError("Prepare data and run all five 10-minute predictors first")
     hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in prepared_paths}
-    for folder in (baseline, lstm):
+    for folder in (baseline, *neural.values()):
         configuration = json.loads((folder / "run_config.json").read_text())
-        required = prepared_paths if folder == lstm else [prepared_paths[0], prepared_paths[1], prepared_paths[3]]
+        required = prepared_paths if folder != baseline else [prepared_paths[0], prepared_paths[1], prepared_paths[3]]
         if configuration["horizon_minutes"] != 10 or any(
                 configuration["artifact_sha256"].get(path.name) != hashes[path.name] for path in required):
             raise ValueError("Forecast provenance differs from current preparation; regenerate matching forecasts")
@@ -138,12 +163,13 @@ def main():
             raise ValueError("Expected one-interval forecasts available at target interval start")
     baseline_values = align_forecasts(read_rows(baseline / "predictions.csv"), metadata, actual,
                                      ["persistence", "moving_average_4"])
-    lstm_values = align_forecasts(read_rows(lstm / "predictions.csv"), metadata, actual, ["lstm"])
+    neural_values = {model: align_forecasts(read_rows(folder / "predictions.csv"), metadata, actual, [model])[model]
+                     for model, folder in neural.items()}
     if not np.allclose(baseline_values["persistence"], history[:, -1], rtol=1e-10, atol=1e-9) or not np.allclose(
             baseline_values["moving_average_4"], history[:, -4:].mean(axis=1), rtol=1e-10, atol=1e-9):
         raise ValueError("Baseline predictions differ from the documented historical inputs")
     policies = {"reactive": history[:, -1], "proactive_moving_average_4": baseline_values["moving_average_4"],
-                "proactive_lstm": lstm_values["lstm"]}
+                **{f"proactive_{model}": values for model, values in neural_values.items()}}
     output = project / "results/allocation/10min"
     metrics, replay = [], []
     defaults = {}
@@ -166,6 +192,12 @@ def main():
                                    "overprovision_mbps": arrays["idle"][position],
                                    "served_mbps": arrays["served"][position]})
         defaults[policy] = select_margin([row for row in metrics if row["policy"] == policy and row["split"] == "validation"])
+    if output.exists() and any(output.iterdir()):
+        archive = project / "results/allocation_archive" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        shutil.copytree(output, archive)
+        print(f"Previous allocation artifacts copied to {archive}")
+        # Independent verification belongs to the previous run until repeated.
+        (output / "verification.json").unlink(missing_ok=True)
     output.mkdir(parents=True, exist_ok=True)
     write_rows(output / "metrics.csv", metrics)
     write_rows(output / "replay.csv", replay)
@@ -187,6 +219,7 @@ def main():
                           for path in prepared_paths + result_paths},
     }
     (output / "run_config.json").write_text(json.dumps(configuration, indent=2) + "\n", encoding="utf-8")
+    plot_comparison(output / "allocation_comparison.png", metrics)
     for policy, chosen in defaults.items():
         test = next(row for row in metrics if row["policy"] == policy and row["split"] == "test" and row["margin"] == chosen["margin"])
         print(f"{policy}: margin={chosen['margin']:.0%}; validation shortfall={chosen['validation_shortfall_pct']:.2f}%; "

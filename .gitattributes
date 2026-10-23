@@ -1,2 +1,15 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve document, image and model bytes exactly on every platform.
+*.pdf binary
+*.pptx binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webm binary
+*.mp4 binary
+*.zip binary
+*.npz binary
+*.pt binary

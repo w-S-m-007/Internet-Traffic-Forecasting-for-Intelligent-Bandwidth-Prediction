@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from experiments.evaluate_allocation import MARGINS, allocate, select_margin
+from experiments.evaluate_allocation import MARGINS, PROACTIVE_MODELS, allocate, select_margin
 from experiments.forecast_metrics import forecast_metrics
 
 
@@ -130,8 +130,8 @@ def model_forecasts(artifacts, model, split):
 
 
 def allocation_snapshot(artifacts, model, split, margin):
-    if artifacts.horizon != 10 or model not in ("lstm", "moving_average_4"):
-        raise ArtifactError("Allocation has been evaluated only for 10-minute LSTM and moving-average forecasts")
+    if artifacts.horizon != 10 or model not in PROACTIVE_MODELS:
+        raise ArtifactError("Allocation requires a supported 10-minute proactive forecast")
     proactive = model_forecasts(artifacts, model, split)
     reactive = model_forecasts(artifacts, "persistence", split)
     if proactive.empty or reactive.empty or proactive["target_id"].tolist() != reactive["target_id"].tolist():
@@ -159,9 +159,17 @@ def load_allocation(project, artifacts):
         path = (project / relative).resolve()
         if not path.is_relative_to(project.resolve()) or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             raise ArtifactError("Allocation forecasts have changed; regenerate allocation before viewing it")
-    if len(metrics) != 24 or metrics.duplicated(["policy", "split", "margin"]).any():
-        raise ArtifactError("Expected the 24 saved allocation comparisons")
-    for model in ("lstm", "moving_average_4"):
+    policies = set(metrics["policy"])
+    required = {"reactive", "proactive_lstm", "proactive_moving_average_4"}
+    supported = {"reactive", *(f"proactive_{model}" for model in PROACTIVE_MODELS)}
+    if (not required.issubset(policies) or not policies.issubset(supported)
+            or len(metrics) != len(policies) * 2 * len(MARGINS)
+            or metrics.duplicated(["policy", "split", "margin"]).any()
+            or not metrics["horizon_minutes"].eq(10).all()):
+        raise ArtifactError("Expected complete supported allocation policy/split/margin comparisons")
+    for model in PROACTIVE_MODELS:
+        if f"proactive_{model}" not in policies:
+            continue
         for split in ("validation", "test"):
             for margin in MARGINS:
                 _, scores = allocation_snapshot(artifacts, model, split, margin)
@@ -171,7 +179,7 @@ def load_allocation(project, artifacts):
                     if len(selected) != 1:
                         raise ArtifactError("Missing allocation policy/split/margin result")
                     assert_scores(selected.iloc[0], scores[name])
-    if set(config["selected_defaults"]) != {"reactive", "proactive_lstm", "proactive_moving_average_4"}:
+    if set(config["selected_defaults"]) != policies:
         raise ArtifactError("Missing validation-selected allocation defaults")
     for policy, chosen in config["selected_defaults"].items():
         validation = metrics[(metrics["policy"] == policy) & (metrics["split"] == "validation")]
