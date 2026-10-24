@@ -37,6 +37,27 @@ class PagesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Changed'):
             build(self.root)
 
+    def test_windows_and_linux_line_endings_have_the_same_checksum(self):
+        data = self.root / 'web/data'
+        canonical = b'{\n  "value": 1\n}\n'
+        (data / 'manifest.json').write_text(json.dumps({
+            'files': {'metadata.json': hashlib.sha256(canonical).hexdigest()}
+        }))
+        for ending in (b'\n', b'\r\n'):
+            with self.subTest(ending=ending):
+                (data / 'metadata.json').write_bytes(canonical.replace(b'\n', ending))
+                build(self.root)
+
+    def test_changed_data_is_rejected_with_windows_line_endings(self):
+        data = self.root / 'web/data'
+        canonical = b'{\n  "value": 1\n}\n'
+        (data / 'manifest.json').write_text(json.dumps({
+            'files': {'metadata.json': hashlib.sha256(canonical).hexdigest()}
+        }))
+        (data / 'metadata.json').write_bytes(canonical.replace(b'1', b'2').replace(b'\n', b'\r\n'))
+        with self.assertRaisesRegex(ValueError, 'Changed'):
+            build(self.root)
+
     def test_manifest_path_cannot_escape_data_directory(self):
         path = self.root / 'web/data/manifest.json'
         path.write_text(json.dumps({'files': {'../../DATA_ATTRIBUTION.md': hashlib.sha256(b'fixture').hexdigest()}}))

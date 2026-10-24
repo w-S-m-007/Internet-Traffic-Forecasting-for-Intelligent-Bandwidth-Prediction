@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def write_json(path, value):
-    path.write_text(json.dumps(value, separators=(',', ':'), allow_nan=False) + '\n', encoding='utf-8')
+    # Explicit bytes prevent Windows from translating LF to CRLF before hashing.
+    path.write_bytes((json.dumps(value, separators=(',', ':'), allow_nan=False) + '\n').encode('utf-8'))
 
 
 def main():

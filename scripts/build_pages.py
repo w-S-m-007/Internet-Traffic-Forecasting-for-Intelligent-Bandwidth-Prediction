@@ -14,7 +14,8 @@ def build(project=ROOT, output=None):
     manifest = json.loads((source / 'data/manifest.json').read_text())
     for name, digest in manifest['files'].items():
         path = (source / 'data' / name).resolve()
-        if not path.is_relative_to((source / 'data').resolve()) or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+        # Ignore Git's CRLF/LF conversion, while still rejecting data edits.
+        if not path.is_relative_to((source / 'data').resolve()) or hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest() != digest:
             raise ValueError(f'Changed or unsafe static export: {name}')
     for name in ('index.html', 'styles.css', 'app.js', 'calculations.js'):
         if not (source / name).is_file():

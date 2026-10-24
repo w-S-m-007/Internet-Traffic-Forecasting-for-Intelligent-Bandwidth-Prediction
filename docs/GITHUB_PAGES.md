@@ -40,7 +40,7 @@ node scripts/check_pages.mjs
 
 The exporter requires the existing dashboard dependencies because it uses the same artifact validation as Streamlit. It reads saved results, checks all predictors and allocation provenance, then exports a compact public snapshot into `web/data/`. Commit that snapshot to publish updates. Publishing never tries to retrieve ignored result files from GitHub.
 
-`web/data/manifest.json` binds the exported files by SHA256 and records forecast-source hashes. Building fails if exported files change without regenerating the manifest. The published snapshot contains recorded rates, forecasts, UTC timestamps and aggregate scores, with dataset attribution. No checkpoints, raw archives, local environments or credentials are deployed.
+`web/data/manifest.json` binds the exported files by SHA256 and records forecast-source hashes. Public JSON uses UTF-8 with LF endings; validation normalizes CRLF to LF so Git line-ending conversion does not cause Windows/Linux checksum mismatches. Building still fails if the data changes without regenerating the manifest. The published snapshot contains recorded rates, forecasts, UTC timestamps and aggregate scores, with dataset attribution. No checkpoints, raw archives, local environments or credentials are deployed.
 
 ## If deployment fails
 

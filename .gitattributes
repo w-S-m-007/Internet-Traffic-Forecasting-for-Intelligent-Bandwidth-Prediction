@@ -1,6 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# Keep the checksummed public snapshot consistent across Windows and Linux.
+web/data/*.json text eol=lf
+
 # Preserve document, image and model bytes exactly on every platform.
 *.pdf binary
 *.pptx binary
