@@ -3,90 +3,65 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Explore Internet traffic forecasts, compare prediction models and simulate bandwidth allocation using saved CESNET experiment results.">
-  <meta name="theme-color" content="#0d1216">
-  <title>Traffic Lab — Forecasting &amp; Capacity</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23141c22'/%3E%3Cpath d='M8 35h12l8-14 9 27 8-15h11' fill='none' stroke='%2379e5ce' stroke-width='4'/%3E%3C/svg%3E">
+  <meta name="description" content="Compare Internet traffic forecasts and explore offline bandwidth allocation using CESNET experiment results.">
+  <meta name="theme-color" content="#f2ece1">
+  <title>Internet Traffic Forecasting</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f2ece1'/%3E%3Cpath d='M3 22h6l5-13 6 16 4-9h5' fill='none' stroke='%23684534' stroke-width='2'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./app.js"></script>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to results</a>
-<header class="site-header">
-  <a class="wordmark" href="#top" aria-label="Traffic Lab, back to top"><svg class="wordmark-mark" aria-hidden="true" viewBox="0 0 36 36"><path d="M5 20h7l5-10 6 17 4-10h4"/></svg><span class="wordmark-caption">traffic<span> / </span>lab</span></a>
-  <div class="header-meta"><a href="#workbench">Experiment</a><a href="#about-heading">Method</a><a href="#documents-heading">Downloads</a></div>
-  <a class="header-link" href="https://github.com/w-S-m-007/Internet-Traffic-Forecasting-for-Intelligent-Bandwidth-Prediction">SOURCE CODE <span aria-hidden="true">↗</span></a>
-</header>
+<a class="skip-link" href="#workbench">Skip to results</a>
+<header class="site-header"><span class="project-name">Network traffic study</span><nav aria-label="Page sections"><a href="#workbench">Explore results</a><a href="#about-heading">Methodology</a></nav></header>
 <main id="main">
-  <section id="top" class="introduction" aria-labelledby="page-title">
-    <div class="intro-grid">
-      <div class="intro-copy"><p class="kicker"><span class="status-dot"></span> INTERNET TRAFFIC FORECASTING</p><h1 id="page-title">Traffic ahead.<br><em>Capacity in focus.</em></h1><p class="intro-detail">Follow the forecast. Compare the models. Explore what happens when predicted demand becomes reserved bandwidth.</p><a href="#workbench" class="text-link">Open experiment <span aria-hidden="true">↗</span></a><span class="intro-disclosure">Saved results · Historical replay</span></div>
-      <div class="signal-map" role="img" aria-label="Experiment pipeline: three hours of traffic history passes through LSTM, GRU or Transformer to forecast a target interval 10, 30 or 60 minutes ahead.">
-        <div class="map-heading"><span>FORECAST PIPELINE</span><span class="map-status">OFFLINE EXPERIMENT</span></div>
-        <svg viewBox="0 0 500 230" aria-hidden="true">
-          <defs><pattern id="map-grid" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#31404a"/></pattern></defs>
-          <rect width="500" height="230" fill="url(#map-grid)"/>
-          <g class="map-wire"><path d="M119 115H174V55H215M174 115H215M174 115V175H215M309 55H350V115H391M309 115H391M309 175H350V115"/></g>
-          <g class="map-node"><rect x="18" y="87" width="101" height="56" rx="8"/><rect x="215" y="35" width="94" height="40" rx="6"/><rect x="215" y="95" width="94" height="40" rx="6"/><rect x="215" y="155" width="94" height="40" rx="6"/><rect x="391" y="87" width="91" height="56" rx="8"/></g>
-          <g class="map-text"><text x="68" y="111">HISTORY</text><text x="68" y="130" class="map-small">18 intervals</text><text x="262" y="60">LSTM</text><text x="262" y="120">GRU</text><text x="262" y="180">Transformer</text><text x="437" y="111">DEMAND</text><text x="437" y="130" class="map-small">Target rate</text></g>
-          <g class="map-junction"><circle cx="174" cy="115" r="4"/><circle cx="350" cy="115" r="4"/></g>
-        </svg>
-        <div class="map-footer"><span>INPUT <strong>3h</strong></span><span>LEAD <strong>10 / 30 / 60 min</strong></span></div>
-      </div>
-    </div>
-    <div class="study-facts" aria-label="Study scope">
-      <div><span>DATASET</span><strong>CESNET</strong><small>Institution 0</small></div>
-      <div><span>OBSERVATIONS</span><strong>10 min</strong><small>Sampling interval</small></div>
-      <div><span>PREDICTORS</span><strong>3 + 2</strong><small>Neural models + baselines</small></div>
-      <div><span>EVALUATION</span><strong>Held out</strong><small>Chronological split</small></div>
-    </div>
-  </section>
-
-  <section id="workbench" class="workbench" aria-label="Interactive results">
-    <div class="section-heading"><div><p class="kicker">EXPERIMENT WORKSPACE</p><h2>Forecast explorer</h2></div><p>Choose a model and lead time.<br>Inspect the recorded results.</p></div>
+  <div class="page-heading"><div><h1>Internet traffic <em>forecasting</em></h1><p>CESNET-TimeSeries24 · Institution 0</p></div><div class="study-intro"><p class="intro-summary">Compare five forecasting methods on recorded network traffic, then test how their predictions translate into allocated capacity.</p><div class="replay-label"><strong>Saved experiment results</strong><span>10-minute observations · UTC</span></div></div></div>
+  <section id="workbench" aria-label="Forecast results">
+    <div class="workbench-heading"><h2>Explore the experiment</h2><p>Choose a method and lead time. Replay the recorded traffic, then compare the decisions.</p></div>
     <div class="control-bar" aria-label="Experiment settings">
-      <label>FORECAST HORIZON<select id="horizon"><option value="10">10 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option></select></label>
-      <label>PREDICTOR<select id="model"><option value="persistence">Persistence</option><option value="moving_average_4">Moving average</option><option value="lstm" selected>LSTM</option><option value="gru">GRU</option><option value="transformer">Transformer</option></select></label>
-      <label>EVALUATION SET<select id="split"><option value="test">Test</option><option value="validation">Validation</option></select></label>
-      <div class="control-context"><span>ACTIVE VIEW</span><strong id="view-label">Overview</strong></div>
+      <label>Model<select id="model" disabled><option value="persistence">Persistence</option><option value="moving_average_4">Moving average</option><option value="lstm" selected>LSTM</option><option value="gru">GRU</option><option value="transformer">Transformer</option></select></label>
+      <label>Forecast horizon<select id="horizon" disabled><option value="10">10 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option></select></label>
+      <label>Evaluation set<select id="split" disabled><option value="test">Test</option><option value="validation">Validation</option></select></label>
+      <p><strong>Input: 18 past observations</strong>Target: one 10-minute interval at the selected lead time.</p>
     </div>
-    <nav class="view-nav" aria-label="Result views"><button data-view="overview" aria-current="page"><span>Overview</span></button><button data-view="forecasts"><span>Forecast trace</span></button><button data-view="comparison"><span>Model comparison</span></button><button data-view="allocation"><span>Capacity test</span></button></nav>
-    <div id="loading" role="status">Loading recorded results…</div>
-    <div id="error" role="alert" hidden></div>
+    <nav class="view-nav" aria-label="Result views"><button data-view="overview" aria-current="page" disabled>Overview</button><button data-view="forecasts" disabled>Forecast</button><button data-view="comparison" disabled>Model comparison</button><button data-view="allocation" disabled>Bandwidth allocation</button></nav>
+    <span id="view-label" class="sr-only" aria-live="polite">Overview</span>
+    <p id="loading" role="status">Loading saved results…</p>
+    <p id="error" role="alert" hidden></p>
+    <noscript><p>Enable JavaScript to view charts and saved results.</p></noscript>
     <div id="dashboard" hidden>
-      <div class="result-head"><div><p class="kicker">CURRENT SELECTION</p><div id="tags" class="tags"></div></div><div class="sample-count"><strong id="count">—</strong><span id="count-label"></span></div></div>
-      <div class="metric-heading"><div><span class="section-number">A</span><h3>Forecast accuracy</h3></div><span>FULL ELIGIBLE SPLIT / NOMINAL MBPS</span></div>
-      <section id="metrics" class="metrics" aria-label="Forecasting metrics"></section>
-      <p id="score-caption" class="caption score-caption"></p>
+      <div class="result-head"><div id="tags" class="tags"></div><span class="sample-count"><strong id="count">—</strong> <span id="count-label"></span></span></div>
       <section id="forecast-panel" class="analysis-section" aria-labelledby="forecast-heading">
-        <div class="analysis-heading"><div><span class="section-number">B</span><h3 id="forecast-heading">The forecast trace</h3><p id="chart-caption" class="caption"></p></div><button class="download" id="download-forecasts">EXPORT FORECAST CSV <span aria-hidden="true">↓</span></button></div>
-        <div id="forecast-chart" class="chart"></div><p id="hover-value" class="chart-readout">Hover or tap the chart to inspect an interval.</p>
-        <div class="replay-controls"><div><label>VISIBLE HISTORY<select id="history"><option value="36">6 nominal hours</option><option value="72">12 nominal hours</option><option value="144" selected>24 nominal hours</option><option value="288">48 nominal hours</option></select></label><p>Slide to replay the held-out intervals. Accuracy scores above use the complete split.</p></div><div class="replay-slider"><label for="replay">REPLAY POSITION <output id="replay-value">144</output></label><input id="replay" type="range" min="1" max="5554" value="144"></div></div>
-        <p id="replay-caption" class="caption replay-caption"></p>
+        <div class="analysis-heading"><div><h2 id="forecast-heading">Actual and predicted traffic</h2><p id="chart-caption" class="caption"></p></div><button class="download" id="download-forecasts">Download CSV</button></div>
+        <div class="forecast-layout"><div class="trace-area"><div id="forecast-chart" class="chart"></div><p id="hover-value" class="chart-readout">Hover or tap the chart to inspect an interval.</p></div><aside class="reading-panel" aria-labelledby="reading-heading"><h3 id="reading-heading">Reading the forecast</h3><div class="reading-item"><span class="reading-label">RMSE versus persistence</span><strong id="baseline-difference">—</strong><p id="baseline-context"></p></div><div class="reading-item"><span class="reading-label">Peak in the visible history</span><strong id="peak-value">—</strong><p id="peak-context"></p></div><button id="jump-peak" class="text-action">Inspect the split’s peak traffic <span aria-hidden="true">↗</span></button></aside></div>
       </section>
+      <section id="replay-panel" class="replay-panel" aria-label="Historical replay">
+        <div class="replay-controls"><label>Visible history<select id="history"><option value="36">6 nominal hours</option><option value="72">12 nominal hours</option><option value="144" selected>24 nominal hours</option><option value="288">48 nominal hours</option></select></label><div class="replay-slider"><label for="replay">Replay interval <output id="replay-value">144</output></label><input id="replay" type="range" min="1" max="5554" value="144"></div></div>
+        <p id="replay-caption" class="caption"></p>
+      </section>
+      <section class="accuracy-section" aria-label="Full-split forecasting accuracy"><div class="metric-heading"><h2>Forecast accuracy</h2><span>Complete eligible split · Replay does not change these scores.</span></div><div id="metrics" class="metrics"></div><p id="score-caption" class="caption"></p></section>
       <div id="lower-grid" class="analysis-grid">
         <section id="comparison-panel" class="analysis-section" aria-labelledby="comparison-heading">
-          <div class="analysis-heading"><div><span class="section-number">C</span><h3 id="comparison-heading">Model comparison</h3><p class="caption">Same target intervals, same split, different prediction methods.</p></div></div>
-          <div id="comparison-chart" class="chart" hidden></div><div id="comparison-table" class="table-wrap"></div><p class="caption">MAE and RMSE use nominal Mbps. Shaded cells indicate the lowest error.</p>
-          <details><summary>Training and CPU inference measurements</summary><div id="timing-table" class="table-wrap"></div><p class="caption">25 warm-up and 1,000 timed single-window CPU calls. Neural models use one CPU thread. Timing varies with machine load and stopping epoch.</p></details>
-          <button class="download" id="download-comparison">EXPORT COMPARISON CSV <span aria-hidden="true">↓</span></button>
+          <div class="analysis-heading"><div><h2 id="comparison-heading">Model comparison</h2><p class="caption">RMSE in Mbps · Lower is better · Same eligible target intervals.</p></div><button class="download" id="download-comparison">Download CSV</button></div>
+          <div id="comparison-chart" class="chart"></div><p id="comparison-reading" class="result-reading"></p><div id="comparison-table" class="table-wrap" tabindex="0" role="region" aria-label="Model comparison table"></div><p class="caption">MAE and RMSE are in Mbps. Bold, shaded cells show the lowest error.</p>
+          <details><summary>Training and inference timings</summary><div id="timing-table" class="table-wrap" tabindex="0" role="region" aria-label="Training and inference timings"></div><p class="caption">25 warm-up and 1,000 timed single-window CPU calls. Neural models use one CPU thread. Timings depend on machine load and stopping epoch.</p></details>
         </section>
         <section id="allocation-panel" class="analysis-section" aria-labelledby="allocation-heading">
-          <div class="analysis-heading"><div><span class="section-number">D</span><h3 id="allocation-heading">Capacity simulation</h3><p class="caption">An offline comparison against a reactive policy.</p></div></div>
-          <div id="allocation-unavailable" class="notice" hidden>Capacity allocation was evaluated at the 10-minute horizon. Select 10 minutes to explore it.</div>
+          <div class="analysis-heading"><div><h2 id="allocation-heading">Bandwidth allocation</h2><p class="caption">Compare forecast-based capacity with a reactive policy at the same margin.</p></div></div>
+          <p id="allocation-unavailable" class="notice" hidden>Allocation was evaluated at the 10-minute horizon. <button id="use-10min" class="inline-button">Switch to 10 minutes</button></p>
           <div id="allocation-content">
-            <div class="allocation-controls"><label>FORECAST POLICY<select id="allocation-model"><option value="lstm">LSTM</option><option value="gru">GRU</option><option value="transformer">Transformer</option><option value="moving_average_4">Moving average</option></select></label><div><label for="margin">SAFETY MARGIN <output id="margin-value">20%</output></label><input id="margin" type="range" min="5" max="20" step="5" value="20"></div></div>
-            <p class="caption">Both policies use the same margin. The reactive policy uses the last observed demand.</p><div id="allocation-metrics" class="allocation-metrics"></div><p id="allocation-warning" class="warning"></p><p id="allocation-point" class="caption"></p><div id="allocation-chart" class="chart" hidden></div><div id="allocation-table" class="table-wrap" hidden></div>
-            <button id="download-allocation" class="download">EXPORT ALLOCATION REPLAY CSV <span aria-hidden="true">↓</span></button><p class="caption">Capacity is an abstract pool. Deficit is simulated unserved demand, not measured packet loss.</p>
+            <div class="allocation-controls"><label>Forecast policy<select id="allocation-model"><option value="lstm">LSTM</option><option value="gru">GRU</option><option value="transformer">Transformer</option><option value="moving_average_4">Moving average</option></select></label><div><label for="margin">Safety margin <output id="margin-value">20%</output></label><input id="margin" type="range" min="5" max="20" step="5" value="20"></div></div>
+            <div class="capacity-example"><h3>From forecast to capacity</h3><p class="caption">At the replayed target · Mbps · Rounded values</p><div id="capacity-equation" class="capacity-equation" role="group"></div></div>
+            <div id="allocation-metrics" class="allocation-metrics"></div><p id="allocation-warning" class="warning"></p><p id="allocation-point" class="caption"></p><div id="allocation-chart" class="chart" hidden></div><div id="allocation-table" class="table-wrap" tabindex="0" role="region" aria-label="Allocation policy comparison" hidden></div><button id="download-allocation" class="download">Download allocation CSV</button>
+            <p id="allocation-reading" class="result-reading"></p>
+            <p class="caption">Reactive capacity uses the latest observed demand. Dots mark intervals where demand exceeds proactive capacity. Deficit is simulated unserved demand, not measured packet loss.</p>
           </div>
         </section>
       </div>
-      <div class="reading-note"><span>EXPERIMENT NOTE</span><p>The test results show that a forecasting model can improve average error over the baselines, yet a 20% safety margin still leaves shortfalls. The allocation target of at most 1% shortfall intervals was not met in validation.</p></div>
+      <p class="experiment-note"><strong>Allocation limitation:</strong> none of the tested margins met the 1% validation shortfall target. The default 20% is a fallback.</p>
     </div>
   </section>
-  <section class="about-study" aria-labelledby="about-heading"><div class="section-heading"><div><span class="section-number">02</span><p class="kicker">THE METHOD</p><h2 id="about-heading">What these numbers mean</h2></div><p>Scope and limitations matter when a forecast becomes a capacity decision.</p></div><div class="method-grid"><article><span>01 / SIGNAL</span><h3>Recorded traffic</h3><p>Nominal Mbps = recorded bytes × 8 ÷ (600 × 1,000,000). Traffic includes both directions; it is not physical link utilization.</p></article><article><span>02 / FORECAST</span><h3>One interval ahead</h3><p>A three-hour history predicts a single 10-minute target interval at the selected 10-, 30-, or 60-minute lead.</p></article><article><span>03 / EVALUATION</span><h3>Chronological holdout</h3><p>Training-only scaling, documented exclusions, and chronological splits protect evaluation. One institution and one seed limit generalisation.</p></article></div><details class="method-details"><summary>See dataset and experiment limitations</summary><p>MAPE excludes non-positive targets. The browser displays saved predictions and scores; model training and experiment regeneration are in the Python repository. All tested safety margins missed the 1% validation shortfall target.</p><p>The capacity experiment is an offline simulation. It does not provide live control, packet loss, latency, or routing measurements.</p></details></section>
-  <section class="documents" aria-labelledby="documents-heading"><div><p class="kicker">FURTHER READING</p><h2 id="documents-heading">Read the full work.</h2><p>Methods, calculations, source code, and presentation materials are available below.</p></div><div class="document-links"><a href="./downloads/report.pdf">Research report <span>PDF ↗</span></a><a href="./downloads/presentation.pptx">Editable presentation <span>PPTX ↗</span></a><a href="./downloads/presentation.pdf">Presentation slides <span>PDF ↗</span></a><a href="./downloads/viva-guide.pdf">Viva &amp; code guide <span>PDF ↗</span></a></div></section>
+  <section class="about-study" aria-labelledby="about-heading"><div class="method-intro"><span class="section-eyebrow">The methodology</span><h2 id="about-heading">From recorded traffic<br>to a capacity decision.</h2><p>This experiment asks whether historical traffic can support proactive bandwidth allocation. The website lets you inspect the saved predictions and their tradeoffs.</p><p class="method-boundary">A 60-minute forecast estimates one 10-minute interval ending an hour ahead. It is not the total usage over the coming hour.</p></div><ol class="method-steps"><li><h3>Measure the traffic</h3><p>Institution 0 from CESNET-TimeSeries24 supplies the recorded byte volumes. Each observation becomes an average rate in Mbps over its 10-minute interval.</p></li><li><h3>Use the preceding three hours</h3><p>LSTM, GRU and Transformer models use 18 observations, calendar features and rolling statistics. Persistence repeats the latest value; the moving average uses the latest four.</p></li><li><h3>Evaluate on later observations</h3><p>Chronological training, validation and test periods keep future targets separate. Scaling uses training data only; windows cannot cross excluded periods or timestamp breaks.</p></li><li><h3>Allocate and measure the tradeoff</h3><p>At the 10-minute horizon, a safety margin is applied to the nonnegative forecast. The reactive policy uses the same margin on the latest observed demand. Both unmet demand and unused capacity matter.</p></li></ol><details class="method-details"><summary>Data definitions, evaluation boundaries and limitations</summary><p>Nominal recorded Mbps = n_bytes × 8 ÷ (600 × 1,000,000). Recorded traffic includes both directions and is not physical link utilization or a user's download speed.</p><p>The 70/15/15 split points are set on the original timeline before exclusions. Eligible windows therefore need not follow those exact proportions. MAPE uses positive targets. One institution and one fixed seed limit generalisation.</p><p>Shortfall volume in decimal MB = deficit Mbps × 600 ÷ 8 for each interval. None of the tested margins met the 1% validation shortfall target; the default 20% is a fallback.</p><p>Bandwidth allocation is an offline capacity-pool simulation. This page replays saved results; it does not collect live traffic or run new model inference. Cloud and data-center use would require separate validation.</p></details></section>
 </main>
-<footer class="site-footer"><span>TRAFFIC / LAB</span><div>Data: <a href="https://doi.org/10.5281/zenodo.13382427">CESNET-TimeSeries24 v1</a>, Koumar et al. · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="./downloads/dataset-attribution.md">Attribution</a><br><span id="export-date"></span> · Dates shown in UTC</div></footer>
+<footer class="site-footer"><div>Data: <a href="https://doi.org/10.5281/zenodo.13382427">CESNET-TimeSeries24 v1</a>, Koumar et al. · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="./downloads/dataset-attribution.md">Attribution</a></div><span id="export-date"></span> · UTC timestamps</footer>
 </body>
 </html>

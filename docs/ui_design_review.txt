@@ -1,0 +1,207 @@
+WEBSITE DESIGN REVIEW
+Reviewed and implemented: 24 October 2026
+
+FOLLOW-UP DIRECTION
+
+The owner preferred the first brown editorial version and requested a related
+design with a slightly different aesthetic. The current treatment follows that
+preference: cream paper, espresso text, serif headings and rust forecast lines.
+The exact earlier version was not recoverable in the available Git or local
+history, so this is a reconstruction of those qualities, not a literal restore.
+Document removal and the previously verified controls remain in place.
+
+SUBSEQUENT EXPANSION: A MORE SUBSTANTIAL RESULTS VIEWER
+
+The owner's next request was to make the page more substantial. The brown
+editorial direction remains, with added information that follows the experiment:
+- A larger traffic trace with a reading panel compares full-split RMSE against
+  persistence and identifies the peak demand within the visible replay history.
+- A shortcut moves replay to the selected split's highest observed demand.
+  It selects peak traffic, not the largest change or a detected anomaly.
+- Horizontal RMSE bars now appear in the overview as well as the comparison
+  view. A sentence identifies the lowest-RMSE model for the selected horizon
+  and split, without implying that it wins every metric or horizon.
+- The allocation view includes a worked forecast-times-margin capacity example.
+  Displayed numbers are rounded, so the formula uses an approximation symbol.
+  A separate explanation compares shortfall percentage points and mean capacity
+  with the reactive policy at the same margin over the full selected split.
+- A four-step methodology section explains measurement, historical inputs,
+  chronological evaluation and the capacity tradeoff. It explicitly separates
+  one target-interval forecast from cumulative usage over the forecast lead.
+- Stronger section headings and active navigation establish hierarchy. Charts
+  and reading notes share a desktop row and stack on narrow mobile screens.
+
+The new reading-panel values, winner statements and capacity interpretations
+are calculated from the existing saved data whenever the selection changes.
+No results, forecasts, model checkpoints or scientific formulas were modified.
+
+PURPOSE AND DIRECTION
+
+The website is an academic results viewer for students, teachers and reviewers.
+Its main tasks are choosing an experiment, inspecting saved forecasts, comparing
+models and testing the effect of allocation margins. Its identity should come
+from those measurements and their interpretation.
+
+The chosen direction combines editorial typography with a measurement workspace:
+a large traffic trace, aligned numeric results, compact controls and tables.
+Cream surfaces make the charts readable; espresso ink identifies observations,
+and a rust-brown dashed line identifies predictions. Georgia provides the title
+and section hierarchy, with a restrained italic emphasis on "forecasting".
+Navigation uses warm inset surfaces, a dark active selection and an underline;
+replay uses simple rules.
+The earlier brown design is the visual reference, while the research tasks
+determine the content order. Actual data provides the main visual interest.
+
+The existing HTML/CSS/JavaScript architecture, saved JSON and GitHub Pages build
+remain in use. No new framework, font download, image library or runtime package
+was added. Design requirements include keyboard access, visible focus, meaningful
+labels, readable contrast, mobile controls and scrollable data tables.
+
+AUDIT AND IMPLEMENTATION
+
+The audit covers the saved dark design and the intermediate local light design.
+Selectors below refer to web/styles.css and web/index.html; chart functions are
+in web/app.js. Findings describe actual issues, not every possible pattern in
+the supplied checklist.
+
+1. Color: the saved dark/mint theme and subsequent blue surfaces were stronger
+   than the meaning of the data. Replaced them with semantic color tokens in
+   :root, subsequently revised to the owner's cream/brown preference. Chart
+   paths use those same tokens instead of unrelated hex values.
+
+2. Typography: the earlier h1 reached 72px, with heavily tracked miniature
+   labels. The current Georgia title is 38-60px, set over two deliberate lines.
+   Segoe UI handles reading and controls; Consolas aligns measurements,
+   timestamps and numeric table columns. Section titles also use Georgia.
+
+3. Hero: .introduction, the oversized headline and diagram delayed access to
+   results. The current .page-heading pairs the study title with a short account
+   of the five methods and capacity experiment. Controls follow directly;
+   there are no introductory cards, decorative diagrams or marketing buttons.
+
+4. Cards: rounded containers and shadows in the intermediate layout gave
+   routine sections equal emphasis. Removed nested panels and shadows. Dividers
+   group tables and metrics; only controls use a small 2px corner radius.
+
+5. Layout: introductory facts repeated information near the workbench. The new
+   order is settings, trace, replay, accuracy, comparison and allocation. The
+   comparison and allocation sections sit together when space allows.
+
+6. Copy: retain exact domain terms and limitations. Replace decorative wording
+   with the 18-observation input, selected lead time, eligible split, UTC target
+   timestamps and explicit explanations of full-split scores versus replay.
+
+7. Imagery: remove the decorative header mark and introductory network diagram.
+   Actual exported measurements supply the plots. No synthetic chart, stock
+   image, testimonial, customer result or invented metric was added.
+
+8. Motion: remove smooth scrolling and avoid entrance or decorative animation.
+   Hover, focus, loading and disabled styles provide immediate feedback. The
+   reduced-motion rule remains; content is available without animation.
+
+9. Navigation/footer: retain four task-specific result views and one methodology
+   anchor. Remove the source-repository link and document navigation. Footer
+   retains the real dataset, license, attribution and snapshot timestamp.
+
+10. Hierarchy: the trace is the primary visual, accuracy is a compact numeric
+    strip, and CSV actions are secondary outlined buttons. The allocation
+    limitation is a visible notice, not a success-style performance claim.
+
+11. Uniformity: use consistent spacing and type without forcing every section
+    into one card template. A replay strip, numeric strip, table and warning
+    each have a form suited to their purpose.
+
+12. Application UX: all existing experiment choices, views, replay, policy
+    margins and CSV exports remain. Replay is available in the allocation view.
+    Loading disables controls; failed loads hide stale results and allow retry
+    through a different horizon. No live inference is implied.
+
+13. CSS/code: replace obsolete hero/card selectors with semantic color, spacing,
+    type and control-radius tokens. Keep the native HTML and JavaScript modules.
+    The existing Python builder performs only static export validation/copying.
+
+14. Accessibility: preserve form labels, heading structure and the skip link.
+    Add chart keyboard inspection, explicit pointer/tap handling, visible SVG
+    focus, table header scopes and focusable scroll regions. Line dashes and
+    bold lowest-error cells supplement color; lowest-error cells also include
+    screen-reader text. One-point replay now draws visible points.
+
+15. Mobile: navigation becomes a two-by-two group, model choice spans the row,
+    replay controls stack and tables scroll inside their section. Metric values
+    use two columns below 1000px. An actual overlap at 651px was found and fixed.
+    Mobile select, tab and CSV targets are at least 44px high.
+
+16. Identity: replace the startup-style mark, decorative framing and repeated
+    headings with the specific institution, observation interval and measurement
+    vocabulary. The final identity comes from the research task and plot styles.
+
+DOCUMENT REMOVAL
+
+The project-documents section and its four links are removed from web/index.html.
+scripts/build_pages.py no longer copies these files into the published site:
+  downloads/report.pdf
+  downloads/presentation.pptx
+  downloads/presentation.pdf
+  downloads/viva-guide.pdf
+
+Rebuilding also removes these specific stale downloads from an existing _site
+directory. Original project reports, presentations and viva files are preserved.
+The dataset-attribution download remains. Original documents may still be
+available in repository history or other places; this change removes their
+publication through this website build.
+
+PRESERVED FEATURES AND RESULTS
+
+All five predictors, three horizons, test/validation selection, historical
+replay, four result views, timing table, allocation policies and 5/10/15/20%
+margins, CSV downloads, dataset attribution and scientific limitations remain.
+The exported JSON, trained models, Python results and allocation formulas were
+not changed by this redesign. GitHub Pages remains a static replay of saved
+experiments; training and Streamlit still run separately.
+
+VALIDATION ACTUALLY PERFORMED
+
+- python scripts/build_pages.py: passed against the actual exported snapshot.
+- python -m unittest tests.test_pages: 7 tests passed, including checksum
+  portability, corruption rejection and original-document preservation while
+  removing stale published copies.
+- node scripts/check_pages.mjs: all 40 allocation rows and 30 forecast MAE/RMSE
+  rows match the verified export; flat/spike and CSV checks passed.
+- Headless Microsoft Edge browser: all 15 model/horizon combinations, split
+  switching, four views, replay updates, margin changes, three CSV downloads,
+  attribution download, failed-load recovery and single-point replay passed.
+- All four removed download URLs return HTTP 404 on the rebuilt local site.
+- Chart keyboard Home/ArrowRight inspection, focus outline and pointer-down
+  inspection passed. Accessible replay values update with the selected time.
+- All views checked for page overflow at 320, 390 and 768px; none found.
+  Metric bounds checked at 320, 390, 651, 768, 850, 1000, 1280, 1440 and 1920px;
+  no overlap remains at the tested default experiment after the repair.
+- Nine principal text/chart foreground/background contrast pairs passed 4.5:1.
+  With the brown palette: body text 13.08:1; muted text on surface 5.93:1;
+  observed line 9.95:1; forecast line 5.00:1; reactive line 4.70:1.
+  This is a targeted contrast check,
+  not a complete accessibility certification.
+- Desktop and mobile screenshots were inspected. No JavaScript page errors
+  occurred during the browser interaction checks. git diff --check passed.
+- After the owner's brown-theme request, the build, browser interactions,
+  responsive metric-boundary and contrast checks were rerun successfully.
+  Build scripts, calculations and JSON data were unchanged by that revision.
+- After the expanded-results request, the reading panel was checked across
+  all 30 model/horizon/split combinations; six peak-traffic shortcuts were
+  checked against the full saved series. All 32 proactive policy/margin/split
+  explanations and rounded capacity examples matched the exported data.
+  The full browser, responsive and allocation/forecast consistency checks also
+  passed for the expanded layout. New helper: check_result_readings.cjs in the
+  ignored results/dashboard folder.
+
+Local QA helpers and screenshots are in ignored results/dashboard/. The normal
+build/unit/math commands above work without those machine-specific helpers.
+
+REMAINING LIMITATIONS
+
+No full screen-reader audit, physical touch-device test, Safari/Firefox test,
+formal WCAG 2.2 AA audit, load/performance benchmark or external-user usability
+study was performed. Browser checks used Microsoft Edge on this Windows machine.
+Numeric tables intentionally scroll horizontally on small screens. The built
+site was verified locally; this review does not establish that GitHub Pages has
+deployed the changes. Aesthetic preference still requires the owner's review.

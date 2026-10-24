@@ -19,18 +19,39 @@ class PagesTests(unittest.TestCase):
         (data / 'manifest.json').write_text(json.dumps({'files': {'metadata.json': hashlib.sha256(b'{}').hexdigest()}}))
         for name in ('index.html', 'styles.css', 'app.js', 'calculations.js'):
             (self.root / 'web' / name).write_text('test asset')
-        for name in ('deliverables/report/project_report.pdf', 'deliverables/presentation/project_presentation.pptx',
-                     'deliverables/presentation/project_presentation.pdf', 'output/pdf/viva_and_code_guide.pdf', 'DATA_ATTRIBUTION.md'):
-            path = self.root / name
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(b'fixture')
+        (self.root / 'DATA_ATTRIBUTION.md').write_bytes(b'fixture')
 
     def test_build_without_raw_data_models_or_result_directories(self):
         output = build(self.root)
         self.assertEqual((output / 'index.html').read_text(), 'test asset')
-        self.assertTrue((output / 'downloads/report.pdf').is_file())
+        self.assertEqual([p.name for p in (output / 'downloads').iterdir()], ['dataset-attribution.md'])
         self.assertTrue((output / '.nojekyll').is_file())
         self.assertFalse((output / 'VirtEnv').exists())
+
+    def test_rebuild_removes_old_published_documents_and_preserves_originals(self):
+        documents = {
+            'report.pdf': 'deliverables/report/project_report.pdf',
+            'presentation.pptx': 'deliverables/presentation/project_presentation.pptx',
+            'presentation.pdf': 'deliverables/presentation/project_presentation.pdf',
+            'viva-guide.pdf': 'output/pdf/viva_and_code_guide.pdf',
+        }
+        output = self.root / '_site'
+        downloads = output / 'downloads'
+        downloads.mkdir(parents=True)
+        for name, relative in documents.items():
+            original = self.root / relative
+            original.parent.mkdir(parents=True, exist_ok=True)
+            original.write_bytes(b'original document')
+            (downloads / name).write_bytes(b'previously published document')
+        (downloads / 'unrelated.txt').write_text('keep')
+
+        build(self.root)
+
+        for name, relative in documents.items():
+            self.assertFalse((downloads / name).exists())
+            self.assertEqual((self.root / relative).read_bytes(), b'original document')
+        self.assertEqual((downloads / 'unrelated.txt').read_text(), 'keep')
+        self.assertEqual((downloads / 'dataset-attribution.md').read_bytes(), b'fixture')
 
     def test_changed_export_is_rejected(self):
         (self.root / 'web/data/metadata.json').write_text('{"changed":true}')

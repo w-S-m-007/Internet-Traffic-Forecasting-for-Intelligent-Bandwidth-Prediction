@@ -26,13 +26,15 @@ def build(project=ROOT, output=None):
     shutil.copytree(source / 'data', output / 'data', dirs_exist_ok=True)
     downloads = output / 'downloads'
     downloads.mkdir(exist_ok=True)
-    files = {'report.pdf': 'deliverables/report/project_report.pdf',
-             'presentation.pptx': 'deliverables/presentation/project_presentation.pptx',
-             'presentation.pdf': 'deliverables/presentation/project_presentation.pdf',
-             'viva-guide.pdf': 'output/pdf/viva_and_code_guide.pdf',
-             'dataset-attribution.md': 'DATA_ATTRIBUTION.md'}
-    for name, relative in files.items():
-        shutil.copy2(project / relative, downloads / name)
+    if not downloads.resolve().is_relative_to(output):
+        raise ValueError(f'Unsafe published download directory: {downloads}')
+    # Remove only documents published by earlier builds. Keep project originals.
+    for name in ('report.pdf', 'presentation.pptx', 'presentation.pdf', 'viva-guide.pdf'):
+        path = downloads / name
+        if not path.resolve().is_relative_to(output):
+            raise ValueError(f'Unsafe published download path: {path}')
+        path.unlink(missing_ok=True)
+    shutil.copy2(project / 'DATA_ATTRIBUTION.md', downloads / 'dataset-attribution.md')
     (output / '.nojekyll').write_text('', encoding='utf-8')
     print(f'Pages site built: {output}')
     return output

@@ -4,7 +4,7 @@ GitHub Pages serves the browser-only dashboard in `web/`. It displays a validate
 
 ## Publish
 
-1. Commit and push `.github/workflows/pages.yml`, `web/`, the two Pages Python scripts, and this documentation. Include the tracked reports, slides and viva PDF used by the download links. The `results/` and raw-data directories stay ignored.
+1. Commit and push `.github/workflows/pages.yml`, `web/`, the two Pages Python scripts, `DATA_ATTRIBUTION.md`, and this documentation. The `results/` and raw-data directories stay ignored.
 2. Open the repository on GitHub. Go to **Settings → Pages**.
 3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
 4. Open **Actions → Deploy traffic dashboard to GitHub Pages**. Run the workflow on `main` if it has not started from your push.
@@ -13,6 +13,8 @@ GitHub Pages serves the browser-only dashboard in `web/`. It displays a validate
    `https://w-s-m-007.github.io/Internet-Traffic-Forecasting-for-Intelligent-Bandwidth-Prediction/`
 
 The workflow builds `_site/` from the tracked snapshot and deploys only that directory. It needs no Python package installation, training job, external chart CDN or secret token. GitHub supplies the workflow deployment credentials. Keep the site's asset links relative so the repository path works.
+
+The site offers result CSVs and dataset attribution. The research report, presentation and viva guide are excluded from the published site. Rebuilding an existing `_site/` also removes the four document downloads produced by older builds; the original project documents remain in their project folders.
 
 GitHub instructions: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site and https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages.
 
@@ -46,6 +48,6 @@ The exporter requires the existing dashboard dependencies because it uses the sa
 
 - **Pages not enabled / Get Pages site failed:** set Settings → Pages → Source to GitHub Actions, then rerun the workflow.
 - **Permission or environment error:** check that GitHub Actions is enabled and that the `github-pages` environment permits the `main` branch. The deploy job already requests `pages: write` and `id-token: write`.
-- **Missing download file:** commit the referenced report/slides/viva PDF. A fresh clone must contain the tracked files used by `build_pages.py`.
+- **Missing dataset attribution:** commit `DATA_ATTRIBUTION.md`; the builder includes it for the published data's source and license. Report, slide and viva files are not required for a Pages build.
 - **Changed static export:** rerun the validated exporter locally, then commit its JSON files together.
 - **404 immediately after deployment:** use the exact deployment URL including the repository name and wait for the successful Pages deployment, rather than opening the account root.
